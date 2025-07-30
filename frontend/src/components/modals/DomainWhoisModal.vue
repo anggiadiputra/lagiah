@@ -120,13 +120,24 @@
 
               <!-- Footer -->
               <div class="flex justify-between items-center px-3 sm:px-4 py-2 sm:py-3 bg-gray-50">
-                <button
-                  @click="refreshWhoisData"
-                  :disabled="loading"
-                  class="px-3 py-1.5 text-xs font-medium text-red-700 bg-white border border-red-300 rounded-md hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {{ loading ? 'Updating...' : 'Update WHOIS' }}
-                </button>
+                <div class="flex space-x-2">
+                  <button
+                    @click="refreshWhoisData"
+                    :disabled="loading"
+                    class="px-3 py-1.5 text-xs font-medium text-red-700 bg-white border border-red-300 rounded-md hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {{ loading ? 'Updating...' : 'Update WHOIS' }}
+                  </button>
+                  <!-- Delete button for Admin and Staff -->
+                  <button
+                    v-if="canDeleteDomain"
+                    @click="deleteDomain"
+                    :disabled="loading"
+                    class="px-3 py-1.5 text-xs font-medium text-white bg-red-600 border border-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Delete Domain
+                  </button>
+                </div>
                 <button
                   @click="closeModal"
                   class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -166,6 +177,12 @@ const whoisInfo = computed(() => {
   }
   return null
 })
+
+// Check if user can delete domain (Admin and Staff only)
+const canDeleteDomain = computed(() => {
+  return authStore.user && (authStore.user.role === 'ADMIN' || authStore.user.role === 'STAFF')
+})
+
 const loading = ref(false)
 
 const closeModal = () => {
@@ -184,6 +201,29 @@ const refreshWhoisData = async () => {
     emit('refresh')
   } catch (err) {
     console.error('Failed to refresh Whois data:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+const deleteDomain = async () => {
+  if (!props.domain) return
+  
+  // Show confirmation dialog
+  if (!confirm(`Are you sure you want to delete domain "${props.domain.name}"? This action cannot be undone.`)) {
+    return
+  }
+  
+  loading.value = true
+  try {
+    await domainsStore.deleteDomain(props.domain.id)
+    // Emit domain deleted event
+    emit('domain-deleted', props.domain.id)
+    // Close modal
+    closeModal()
+  } catch (err) {
+    console.error('Failed to delete domain:', err)
+    alert('Failed to delete domain. Please try again.')
   } finally {
     loading.value = false
   }

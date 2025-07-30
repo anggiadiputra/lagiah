@@ -696,6 +696,7 @@
       @close="closeModal"
       @refresh="handleModalRefresh"
       @edit-domain="handleEditDomain"
+      @domain-deleted="handleDomainDeleted"
     />
 
     <!-- Edit Domain Modal -->
@@ -1051,6 +1052,13 @@ const closeModal = () => {
 const handleModalRefresh = async () => {
   // Refresh the domains list after Whois data is updated
   await fetchDomains()
+}
+
+// Handle domain deleted
+const handleDomainDeleted = async (domainId: string) => {
+  // Refresh the domains list after domain is deleted
+  await fetchDomains()
+  console.log('Domain deleted successfully:', domainId)
 }
 
 // Open Edit Domain modal
