@@ -186,9 +186,7 @@ const canDeleteDomain = computed(() => {
 const loading = ref(false)
 
 const closeModal = () => {
-  if (!loading.value) {
-    emit('close')
-  }
+  emit('close')
 }
 
 const refreshWhoisData = async () => {
@@ -219,8 +217,8 @@ const deleteDomain = async () => {
     await domainsStore.deleteDomain(props.domain.id)
     // Emit domain deleted event
     emit('domain-deleted', props.domain.id)
-    // Close modal
-    closeModal()
+    // Close modal immediately after successful delete
+    emit('close')
   } catch (err) {
     console.error('Failed to delete domain:', err)
     alert('Failed to delete domain. Please try again.')
