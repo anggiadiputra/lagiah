@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Token Comparison</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h1>Test Token Comparison</h1>
+    <div id="output"></div>
+
+    <script>
+        const output = document.getElementById('output');
+        
+        function log(message) {
+            output.innerHTML += '<p>' + message + '</p>';
+            console.log(message);
+        }
+        
+        async function testTokenComparison() {
+            try {
+                log('=== Testing Token Comparison ===');
+                
+                const baseURL = 'http://localhost:3004/api/v1';
+                const hostingId = 'cmdkjaau8002tmm3x5hswwulk';
+                
+                // 1. Check current token in localStorage
+                log('1. Checking current token in localStorage...');
+                const currentToken = localStorage.getItem('auth_token');
+                if (currentToken) {
+                    log(`✅ Current token: ${currentToken.substring(0, 20)}...`);
+                } else {
+                    log('❌ No current token in localStorage');
+                }
+                
+                // 2. Login to get fresh token
+                log('2. Logging in to get fresh token...');
+                const loginResponse = await axios.post(`${baseURL}/auth/login`, {
+                    email: 'admin@lagiah.com',
+                    password: 'admin123'
+                });
+                
+                const freshToken = loginResponse.data.data.token;
+                log(`✅ Fresh token: ${freshToken.substring(0, 20)}...`);
+                
+                // 3. Compare tokens
+                log('3. Comparing tokens...');
+                if (currentToken === freshToken) {
+                    log('✅ Tokens are identical');
+                } else {
+                    log('❌ Tokens are different!');
+                    log(`Current: ${currentToken ? currentToken.substring(0, 20) + '...' : 'null'}`);
+                    log(`Fresh: ${freshToken.substring(0, 20)}...`);
+                }
+                
+                // 4. Test with current token
+                if (currentToken) {
+                    log('4. Testing with current token...');
+                    try {
+                        const currentResponse = await axios.get(`${baseURL}/hosting/${hostingId}`, {
+                            headers: { 'Authorization': `Bearer ${currentToken}` }
+                        });
+                        log('✅ Current token works');
+                        log(`Hosting: ${currentResponse.data.data.name}`);
+                    } catch (error) {
+                        log('❌ Current token failed: ' + error.message);
+                        if (error.response) {
+                            log(`Status: ${error.response.status}`);
+                            log(`Data: ${JSON.stringify(error.response.data)}`);
+                        }
+                    }
+                }
+                
+                // 5. Test with fresh token
+                log('5. Testing with fresh token...');
+                try {
+                    const freshResponse = await axios.get(`${baseURL}/hosting/${hostingId}`, {
+                        headers: { 'Authorization': `Bearer ${freshToken}` }
+                    });
+                    log('✅ Fresh token works');
+                    log(`Hosting: ${freshResponse.data.data.name}`);
+                } catch (error) {
+                    log('❌ Fresh token failed: ' + error.message);
+                    if (error.response) {
+                        log(`Status: ${error.response.status}`);
+                        log(`Data: ${JSON.stringify(error.response.data)}`);
+                    }
+                }
+                
+                // 6. Update localStorage with fresh token
+                log('6. Updating localStorage with fresh token...');
+                localStorage.setItem('auth_token', freshToken);
+                log('✅ Token updated in localStorage');
+                
+                // 7. Test with updated token
+                log('7. Testing with updated token...');
+                try {
+                    const updatedResponse = await axios.get(`${baseURL}/hosting/${hostingId}`, {
+                        headers: { 'Authorization': `Bearer ${freshToken}` }
+                    });
+                    log('✅ Updated token works');
+                    log(`Hosting: ${updatedResponse.data.data.name}`);
+                } catch (error) {
+                    log('❌ Updated token failed: ' + error.message);
+                    if (error.response) {
+                        log(`Status: ${error.response.status}`);
+                        log(`Data: ${JSON.stringify(error.response.data)}`);
+                    }
+                }
+                
+                // 8. Simulate API service call
+                log('8. Simulating API service call...');
+                const simulatedToken = localStorage.getItem('auth_token');
+                log(`Simulated token: ${simulatedToken ? simulatedToken.substring(0, 20) + '...' : 'null'}`);
+                
+                if (simulatedToken) {
+                    try {
+                        const simulatedResponse = await axios.get(`${baseURL}/hosting/${hostingId}`, {
+                            headers: { 'Authorization': `Bearer ${simulatedToken}` }
+                        });
+                        log('✅ Simulated API call works');
+                        log(`Hosting: ${simulatedResponse.data.data.name}`);
+                    } catch (error) {
+                        log('❌ Simulated API call failed: ' + error.message);
+                        if (error.response) {
+                            log(`Status: ${error.response.status}`);
+                            log(`Data: ${JSON.stringify(error.response.data)}`);
+                        }
+                    }
+                }
+                
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+                if (error.response) {
+                    log('Status: ' + error.response.status);
+                    log('Data: ' + JSON.stringify(error.response.data));
+                }
+            }
+        }
+        
+        // Run test
+        testTokenComparison();
+    </script>
+</body>
+</html> 

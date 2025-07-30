@@ -1,0 +1,97 @@
+# Domain & Hosting Management System - Development Framework
+
+## Project Context & Architecture
+**Tech Stack**: Vue 3 (Composition API), Next.js 14 (App Router), TypeScript, MySQL/MariaDB, Redis, Tailwind CSS
+**Architecture**: Headless Web App, RESTful API, Component-based Frontend, Prisma ORM
+**Core Constraints**: Shared hosting compatible, < $100/month infrastructure, 100 users MVP scaling to 10k+
+
+## Development Standards
+**Code Quality**: TypeScript strict mode, Composition API patterns, SOLID principles, Prisma for type-safe DB
+**Naming**: PascalCase components (DomainList.vue), camelCase functions, kebab-case files, snake_case DB
+**Error Handling**: Zod validation, try-catch with proper logging, user-friendly error messages
+**Comments**: JSDoc for API endpoints, complex business logic explanation, TODO with issue references
+
+## Security & Authentication
+**Auth Pattern**: NextAuth.js with JWT, secure HTTP-only cookies, session management via Redis
+**Input Validation**: Zod schemas for all inputs, Prisma parameterized queries, API rate limiting
+**Headers**: HTTPS mandatory, CSP headers, CORS configuration for API
+**Permissions**: RBAC with Admin/Staff/Viewer roles, middleware-based route protection
+
+## UI/UX Guidelines
+**Accessibility**: WCAG 2.1 AA compliance, semantic HTML, keyboard navigation, ARIA labels
+**Performance**: <3s page load, Redis caching (5-30min TTL), lazy loading, optimized images
+**Responsive**: Mobile-first with Tailwind, breakpoints: sm(640px), md(768px), lg(1024px)
+**Feedback**: Loading skeletons, toast notifications, form validation feedback
+
+## Domain-Specific Patterns
+**Whois Integration**: Cache results 24hrs, handle rate limits, background job for expiry checks
+**Credential Storage**: Encrypt sensitive data with crypto module, never log credentials
+**Expiration Tracking**: Cron jobs for daily checks, alerts at 30/14/7 days, email notifications
+**Activity Logging**: Track all CRUD operations, store user actions, maintain audit trail
+
+## Problem-Solving Approach
+**Method**: IDENTIFY → ISOLATE → FIX → VERIFY → DOCUMENT
+**Debugging**: Check logs → Verify DB state → Test API endpoint → Validate frontend
+**Performance**: Profile with Chrome DevTools, check DB queries with Prisma logging
+**Testing**: Unit tests for utils, integration tests for API, manual testing for UI
+
+## Performance & Efficiency
+**Database**: Essential indexes only for MVP, connection pooling, query optimization
+**Caching**: Redis for sessions/API responses, browser caching headers, CDN for static assets
+**Code Reuse**: Shared components library, API service classes, utility functions
+**Monitoring**: PM2 for process management, basic health checks, error logging
+
+## MVP Development Focus
+**Week 1-2**: Foundation - Auth, DB schema, base UI layouts
+**Week 3-4**: Core Features - Domain/Hosting CRUD, Dashboard, Whois integration  
+**Week 5-6**: Polish - Testing, deployment, documentation, beta testing
+**Post-MVP**: VPS management, notifications, advanced search, automation
+
+## Quick Commands
+- "SETUP ENV" - Initialize project with all dependencies and configurations
+- "CREATE CRUD" - Generate CRUD endpoints and UI for a resource
+- "ADD AUTH" - Implement authentication for a route/component
+- "OPTIMIZE QUERY" - Analyze and optimize database queries
+- "DEPLOY CHECK" - Verify deployment readiness and configurations
+
+## Development Workflow
+**Git Flow**: feature/* branches, develop for integration, main for production
+**Code Reviews**: PR required for main/develop, test coverage check, style compliance
+**Testing**: Write tests alongside features, 50% coverage for MVP, critical path focus
+**Documentation**: Update README, document API changes, maintain deployment guide
+
+## API Design Standards
+```
+GET    /api/v1/resources?page=1&limit=50&sort=field
+POST   /api/v1/resources
+GET    /api/v1/resources/:id
+PUT    /api/v1/resources/:id  
+DELETE /api/v1/resources/:id
+
+Response: { status, data, meta, error? }
+```
+
+## Common Tasks Templates
+**New Feature**: Create DB migration → API endpoint → Service class → UI component → Tests
+**Bug Fix**: Reproduce → Write failing test → Fix → Verify → Document
+**Performance**: Measure baseline → Identify bottleneck → Optimize → Measure improvement
+**Security**: Audit inputs → Check permissions → Review logs → Update documentation
+
+## Deployment Checklist
+- [ ] Environment variables configured
+- [ ] Database migrations run
+- [ ] Redis connection verified
+- [ ] PM2 ecosystem file ready
+- [ ] Nginx configuration updated
+- [ ] SSL certificates valid
+- [ ] Backup strategy implemented
+- [ ] Monitoring alerts setup
+
+## Memory Management
+**Create Memory**: After implementing major features or learning project patterns
+**Update Memory**: When requirements change or bugs are fixed
+**Reference Memory**: Use [[memory:ID]] when applying learned patterns
+**Memory Topics**: API patterns, common bugs, performance tips, security measures
+**Common Tasks**: CRUD operations, authentication flows, API integrations
+**Testing**: Unit tests, integration tests, E2E scenarios
+**Deployment**: CI/CD pipelines, environment management, rollback strategies

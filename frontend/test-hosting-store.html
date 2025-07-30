@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Hosting Store Response</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h1>Test Hosting Store Response</h1>
+    <div id="output"></div>
+
+    <script>
+        const output = document.getElementById('output');
+        
+        function log(message) {
+            output.innerHTML += '<p>' + message + '</p>';
+            console.log(message);
+        }
+        
+        async function testHostingStore() {
+            try {
+                log('=== Testing Hosting Store Response ===');
+                
+                const baseURL = 'http://localhost:3004/api/v1';
+                const hostingId = 'cmdkjaau8002tmm3x5hswwulk';
+                
+                // 1. Login
+                log('1. Logging in...');
+                const loginResponse = await axios.post(`${baseURL}/auth/login`, {
+                    email: 'admin@lagiah.com',
+                    password: 'admin123'
+                });
+                
+                const token = loginResponse.data.data.token;
+                log('✅ Login successful');
+                
+                // 2. Test direct API call (like api.ts)
+                log('2. Testing direct API call...');
+                try {
+                    const apiResponse = await axios.get(`${baseURL}/hosting/${hostingId}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    log('✅ Direct API call successful');
+                    log('API Response structure:');
+                    log(`  - status: ${apiResponse.status}`);
+                    log(`  - data.status: ${apiResponse.data.status}`);
+                    log(`  - data.data.id: ${apiResponse.data.data.id}`);
+                    log(`  - data.data.name: ${apiResponse.data.data.name}`);
+                    log(`  - data.data.domains.length: ${apiResponse.data.data.domains.length}`);
+                } catch (error) {
+                    log('❌ Direct API call failed: ' + error.message);
+                }
+                
+                // 3. Simulate hosting store fetchHostingById
+                log('3. Simulating hosting store fetchHostingById...');
+                try {
+                    // Simulate the exact logic from hosting store
+                    const response = await axios.get(`${baseURL}/hosting/${hostingId}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    log('✅ API call successful');
+                    
+                    // Handle both response formats (direct data or nested in response.data)
+                    const responseData = response.data ? response.data : response;
+                    
+                    log('Response data structure:');
+                    log(`  - responseData: ${typeof responseData}`);
+                    log(`  - responseData.status: ${responseData.status}`);
+                    log(`  - responseData.data: ${typeof responseData.data}`);
+                    
+                    if (responseData && responseData.status === 'success') {
+                        const hosting = responseData.data;
+                        log('✅ Hosting data extracted successfully');
+                        log(`  - hosting.id: ${hosting.id}`);
+                        log(`  - hosting.name: ${hosting.name}`);
+                        log(`  - hosting.domains.length: ${hosting.domains.length}`);
+                        log(`  - hosting.domains[0].name: ${hosting.domains[0]?.name}`);
+                        log(`  - hosting.domains[0].isMainDomain: ${hosting.domains[0]?.isMainDomain}`);
+                        
+                        // Test domain mapping
+                        const currentDomainIds = hosting.domains.map(d => d.id);
+                        log(`  - currentDomainIds: ${currentDomainIds.join(', ')}`);
+                        
+                        return hosting; // This is what hosting store returns
+                    } else {
+                        log('❌ Response status is not success');
+                        log(`  - status: ${responseData.status}`);
+                        log(`  - message: ${responseData.message}`);
+                        return null;
+                    }
+                } catch (err) {
+                    log('❌ Error in fetchHostingById simulation: ' + err.message);
+                    if (err.response) {
+                        log(`  - status: ${err.response.status}`);
+                        log(`  - data: ${JSON.stringify(err.response.data)}`);
+                    }
+                    return null;
+                }
+                
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+                if (error.response) {
+                    log('Status: ' + error.response.status);
+                    log('Data: ' + JSON.stringify(error.response.data));
+                }
+            }
+        }
+        
+        // Run test
+        testHostingStore();
+    </script>
+</body>
+</html> 

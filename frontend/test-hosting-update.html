@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Hosting Update</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h1>Test Hosting Update</h1>
+    <div id="output"></div>
+
+    <script>
+        const output = document.getElementById('output');
+        
+        function log(message) {
+            output.innerHTML += '<p>' + message + '</p>';
+            console.log(message);
+        }
+        
+        async function testHostingUpdate() {
+            try {
+                log('=== Testing Hosting Update ===');
+                
+                const baseURL = 'http://localhost:3004/api/v1';
+                const hostingId = 'cmdkjaau8002tmm3x5hswwulk';
+                
+                // 1. Login
+                log('1. Logging in...');
+                const loginResponse = await axios.post(`${baseURL}/auth/login`, {
+                    email: 'admin@lagiah.com',
+                    password: 'admin123'
+                });
+                
+                const token = loginResponse.data.data.token;
+                log('✅ Login successful, token received');
+                
+                // 2. Get current hosting
+                log('2. Getting current hosting...');
+                const getResponse = await axios.get(`${baseURL}/hosting/${hostingId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                log('✅ GET successful');
+                log('Current domains: ' + JSON.stringify(getResponse.data.data.domains.map(d => ({
+                    name: d.name,
+                    isMainDomain: d.isMainDomain
+                }))));
+                
+                // 3. Update hosting with domain assignment
+                log('3. Updating hosting with domain assignment...');
+                const updateData = {
+                    name: "Warnahost Test",
+                    provider: "Warnahost",
+                    status: "ACTIVE",
+                    planName: "Medium Cloud",
+                    cpanelUrl: "https://apollo.warnahost.com:2083/",
+                    username: "jasakami",
+                    password: "admin123",
+                    expiresAt: "2025-08-27T00:00:00.000Z",
+                    createdAt: "2025-07-27T00:00:00.000Z",
+                    domainIds: [
+                        "cmdkgorvd001qmm3xix6hkmfw",
+                        "cmdki6wia002bmm3xtio44o4y"
+                    ]
+                };
+                
+                const updateResponse = await axios.put(`${baseURL}/hosting/${hostingId}`, updateData, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log('✅ PUT successful');
+                log('Updated domains: ' + JSON.stringify(updateResponse.data.data.domains.map(d => ({
+                    name: d.name,
+                    isMainDomain: d.isMainDomain
+                }))));
+                
+                // 4. Get hosting again to verify
+                log('4. Verifying update...');
+                const verifyResponse = await axios.get(`${baseURL}/hosting/${hostingId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                log('✅ Verification successful');
+                log('Final domains: ' + JSON.stringify(verifyResponse.data.data.domains.map(d => ({
+                    name: d.name,
+                    isMainDomain: d.isMainDomain
+                }))));
+                
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+                if (error.response) {
+                    log('Status: ' + error.response.status);
+                    log('Data: ' + JSON.stringify(error.response.data));
+                }
+            }
+        }
+        
+        // Run test
+        testHostingUpdate();
+    </script>
+</body>
+</html> 

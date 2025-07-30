@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPS Search Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-container { max-width: 600px; margin: 0 auto; }
+        .search-box { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; }
+        .results { margin-top: 20px; }
+        .vps-item { padding: 10px; border: 1px solid #eee; margin: 5px 0; border-radius: 4px; }
+        .highlight { background-color: yellow; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>VPS Search Test</h1>
+        
+        <input type="text" id="searchInput" class="search-box" placeholder="Search VPS names and providers...">
+        
+        <div class="results" id="results">
+            <p>Type in the search box above to test filtering...</p>
+        </div>
+    </div>
+
+    <script>
+        // Mock VPS data for testing
+        const mockVPSData = [
+            { id: '1', name: 'Production Server', provider: 'DigitalOcean', status: 'ACTIVE' },
+            { id: '2', name: 'Staging Server', provider: 'AWS', status: 'ACTIVE' },
+            { id: '3', name: 'Development VPS', provider: 'Linode', status: 'SUSPENDED' },
+            { id: '4', name: 'Test Server', provider: 'Vultr', status: 'ACTIVE' },
+            { id: '5', name: 'Backup Server', provider: 'DigitalOcean', status: 'ACTIVE' }
+        ];
+
+        const searchInput = document.getElementById('searchInput');
+        const resultsDiv = document.getElementById('results');
+
+        function filterVPS(searchTerm) {
+            if (!searchTerm.trim()) {
+                return mockVPSData;
+            }
+
+            const term = searchTerm.toLowerCase().trim();
+            return mockVPSData.filter(vps => 
+                vps.name.toLowerCase().includes(term) ||
+                vps.provider.toLowerCase().includes(term)
+            );
+        }
+
+        function displayResults(vpsList) {
+            if (vpsList.length === 0) {
+                resultsDiv.innerHTML = '<p>No VPS servers found matching your search.</p>';
+                return;
+            }
+
+            const html = vpsList.map(vps => `
+                <div class="vps-item">
+                    <strong>${vps.name}</strong> - ${vps.provider} (${vps.status})
+                </div>
+            `).join('');
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value;
+            const filteredVPS = filterVPS(searchTerm);
+            displayResults(filteredVPS);
+            
+            console.log('Search term:', searchTerm);
+            console.log('Filtered results:', filteredVPS);
+        });
+
+        // Initial display
+        displayResults(mockVPSData);
+    </script>
+</body>
+</html> 

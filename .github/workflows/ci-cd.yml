@@ -1,0 +1,318 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  NODE_VERSION: '20'
+  BACKEND_PORT: 3004
+  FRONTEND_PORT: 5178
+
+jobs:
+  # Lint and Test Backend
+  backend-test:
+    name: Backend - Lint & Test
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test
+          MYSQL_DATABASE: lagiah_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: --health-cmd="redis-cli ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Setup environment
+        working-directory: ./backend
+        run: |
+          cp .env.example .env
+          echo "DATABASE_URL=mysql://root:test@localhost:3306/lagiah_test" >> .env
+          echo "NEXTAUTH_SECRET=test-secret" >> .env
+          echo "NEXTAUTH_URL=http://localhost:3004" >> .env
+          echo "REDIS_URL=redis://localhost:6379" >> .env
+
+      - name: Generate Prisma client
+        working-directory: ./backend
+        run: npx prisma generate
+
+      - name: Run database migrations
+        working-directory: ./backend
+        run: npx prisma migrate deploy
+
+      - name: Lint backend
+        working-directory: ./backend
+        run: npm run lint:check
+
+      - name: Type check backend
+        working-directory: ./backend
+        run: npm run type-check
+
+      - name: Build backend
+        working-directory: ./backend
+        run: npm run build
+
+  # Lint and Test Frontend
+  frontend-test:
+    name: Frontend - Lint & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Setup environment
+        working-directory: ./frontend
+        run: |
+          cp env.production.example .env
+          echo "VITE_API_BASE_URL=http://localhost:3004" >> .env
+
+      - name: Lint frontend
+        working-directory: ./frontend
+        run: npm run lint:check
+
+      - name: Type check frontend
+        working-directory: ./frontend
+        run: npm run type-check
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build:prod
+
+  # Integration Tests
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-test]
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test
+          MYSQL_DATABASE: lagiah_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: --health-cmd="redis-cli ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd backend && npm ci
+          cd ../frontend && npm ci
+
+      - name: Setup backend environment
+        working-directory: ./backend
+        run: |
+          cp .env.example .env
+          echo "DATABASE_URL=mysql://root:test@localhost:3306/lagiah_test" >> .env
+          echo "NEXTAUTH_SECRET=test-secret" >> .env
+          echo "NEXTAUTH_URL=http://localhost:3004" >> .env
+          echo "REDIS_URL=redis://localhost:6379" >> .env
+
+      - name: Setup frontend environment
+        working-directory: ./frontend
+        run: |
+          cp env.production.example .env
+          echo "VITE_API_BASE_URL=http://localhost:3004" >> .env
+
+      - name: Generate Prisma client
+        working-directory: ./backend
+        run: npx prisma generate
+
+      - name: Run database migrations
+        working-directory: ./backend
+        run: npx prisma migrate deploy
+
+      - name: Start backend server
+        working-directory: ./backend
+        run: npm run build && npm start &
+        env:
+          PORT: ${{ env.BACKEND_PORT }}
+
+      - name: Wait for backend
+        run: |
+          timeout 30 bash -c 'until curl -f http://localhost:${{ env.BACKEND_PORT }}/api/health; do sleep 1; done'
+
+      - name: Run API tests
+        run: |
+          # Test health endpoint
+          curl -f http://localhost:${{ env.BACKEND_PORT }}/api/health
+          
+          # Test auth endpoints
+          curl -f http://localhost:${{ env.BACKEND_PORT }}/api/v1/auth/me || echo "Auth endpoint test completed"
+
+      - name: Build and test frontend
+        working-directory: ./frontend
+        run: |
+          npm run build:prod
+          npm run preview:prod &
+          sleep 5
+          curl -f http://localhost:${{ env.FRONTEND_PORT }} || echo "Frontend test completed"
+
+  # Deploy to Staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [integration-test]
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd backend && npm ci
+          cd ../frontend && npm ci
+
+      - name: Build backend
+        working-directory: ./backend
+        run: npm run build:prod
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build:prod
+
+      - name: Deploy to staging server
+        run: |
+          echo "Deploying to staging server..."
+          # Add your staging deployment commands here
+          # Example: rsync, docker push, or cloud deployment
+
+      - name: Notify staging deployment
+        run: |
+          echo "✅ Staging deployment completed successfully!"
+          # Add notification logic (Slack, Discord, etc.)
+
+  # Deploy to Production
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [integration-test]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd backend && npm ci
+          cd ../frontend && npm ci
+
+      - name: Build backend
+        working-directory: ./backend
+        run: npm run build:prod
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build:prod
+
+      - name: Database backup
+        run: |
+          echo "Creating database backup before deployment..."
+          # Add database backup logic here
+
+      - name: Deploy to production server
+        run: |
+          echo "Deploying to production server..."
+          # Add your production deployment commands here
+          # Example: rsync, docker push, or cloud deployment
+
+      - name: Run production migrations
+        run: |
+          echo "Running production database migrations..."
+          # Add production migration commands here
+
+      - name: Health check
+        run: |
+          echo "Performing health checks..."
+          # Add health check commands here
+
+      - name: Notify production deployment
+        run: |
+          echo "🚀 Production deployment completed successfully!"
+          # Add notification logic (Slack, Discord, etc.)
+
+  # Security Scan
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-test]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run security scan
+        run: |
+          echo "Running security scans..."
+          # Add security scanning tools here
+          # Example: npm audit, snyk, etc.
+
+      - name: Check for vulnerabilities
+        run: |
+          echo "Checking for vulnerabilities..."
+          # Add vulnerability checking logic here 

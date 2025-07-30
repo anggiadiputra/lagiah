@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test localStorage Token</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h1>Test localStorage Token</h1>
+    <div id="output"></div>
+
+    <script>
+        const output = document.getElementById('output');
+        
+        function log(message) {
+            output.innerHTML += '<p>' + message + '</p>';
+            console.log(message);
+        }
+        
+        async function testLocalStorageToken() {
+            try {
+                log('=== Testing localStorage Token ===');
+                
+                const baseURL = 'http://localhost:3004/api/v1';
+                const hostingId = 'cmdkjaau8002tmm3x5hswwulk';
+                
+                // 1. Check all localStorage keys
+                log('1. Checking localStorage keys...');
+                const allKeys = Object.keys(localStorage);
+                log(`Total localStorage keys: ${allKeys.length}`);
+                allKeys.forEach(key => {
+                    const value = localStorage.getItem(key);
+                    if (key.includes('token') || key.includes('auth')) {
+                        log(`  - ${key}: ${value ? value.substring(0, 20) + '...' : 'null'}`);
+                    } else {
+                        log(`  - ${key}: ${typeof value} (${value ? value.length : 0} chars)`);
+                    }
+                });
+                
+                // 2. Check specific token keys
+                log('2. Checking specific token keys...');
+                const authToken = localStorage.getItem('auth_token');
+                const token = localStorage.getItem('token');
+                const userToken = localStorage.getItem('user_token');
+                
+                log(`  - auth_token: ${authToken ? authToken.substring(0, 20) + '...' : 'null'}`);
+                log(`  - token: ${token ? token.substring(0, 20) + '...' : 'null'}`);
+                log(`  - user_token: ${userToken ? userToken.substring(0, 20) + '...' : 'null'}`);
+                
+                // 3. Login to get fresh token
+                log('3. Logging in to get fresh token...');
+                const loginResponse = await axios.post(`${baseURL}/auth/login`, {
+                    email: 'admin@lagiah.com',
+                    password: 'admin123'
+                });
+                
+                const freshToken = loginResponse.data.data.token;
+                log(`✅ Fresh token: ${freshToken.substring(0, 20)}...`);
+                
+                // 4. Check localStorage after login
+                log('4. Checking localStorage after login...');
+                const authTokenAfter = localStorage.getItem('auth_token');
+                log(`  - auth_token after login: ${authTokenAfter ? authTokenAfter.substring(0, 20) + '...' : 'null'}`);
+                
+                // 5. Test with auth_token from localStorage
+                if (authTokenAfter) {
+                    log('5. Testing with auth_token from localStorage...');
+                    try {
+                        const getResponse = await axios.get(`${baseURL}/hosting/${hostingId}`, {
+                            headers: { 'Authorization': `Bearer ${authTokenAfter}` }
+                        });
+                        log('✅ GET with auth_token successful');
+                        log(`Hosting: ${getResponse.data.data.name} (${getResponse.data.data.provider})`);
+                    } catch (error) {
+                        log('❌ GET with auth_token failed: ' + error.message);
+                        if (error.response) {
+                            log(`Status: ${error.response.status}`);
+                            log(`Data: ${JSON.stringify(error.response.data)}`);
+                        }
+                    }
+                } else {
+                    log('5. Skipping auth_token test (no token in localStorage)');
+                }
+                
+                // 6. Test with fresh token
+                log('6. Testing with fresh token...');
+                try {
+                    const getResponse = await axios.get(`${baseURL}/hosting/${hostingId}`, {
+                        headers: { 'Authorization': `Bearer ${freshToken}` }
+                    });
+                    log('✅ GET with fresh token successful');
+                    log(`Hosting: ${getResponse.data.data.name} (${getResponse.data.data.provider})`);
+                } catch (error) {
+                    log('❌ GET with fresh token failed: ' + error.message);
+                    if (error.response) {
+                        log(`Status: ${error.response.status}`);
+                        log(`Data: ${JSON.stringify(error.response.data)}`);
+                    }
+                }
+                
+                // 7. Simulate what the API service does
+                log('7. Simulating API service token retrieval...');
+                const simulatedToken = localStorage.getItem('auth_token');
+                log(`Simulated token retrieval: ${simulatedToken ? simulatedToken.substring(0, 20) + '...' : 'null'}`);
+                
+                if (simulatedToken) {
+                    try {
+                        const getResponse = await axios.get(`${baseURL}/hosting/${hostingId}`, {
+                            headers: { 'Authorization': `Bearer ${simulatedToken}` }
+                        });
+                        log('✅ GET with simulated token successful');
+                    } catch (error) {
+                        log('❌ GET with simulated token failed: ' + error.message);
+                        if (error.response) {
+                            log(`Status: ${error.response.status}`);
+                            log(`Data: ${JSON.stringify(error.response.data)}`);
+                        }
+                    }
+                }
+                
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+                if (error.response) {
+                    log('Status: ' + error.response.status);
+                    log('Data: ' + JSON.stringify(error.response.data));
+                }
+            }
+        }
+        
+        // Run test
+        testLocalStorageToken();
+    </script>
+</body>
+</html> 

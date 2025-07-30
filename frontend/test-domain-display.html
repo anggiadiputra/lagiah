@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Domain Display</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h1>Test Domain Display</h1>
+    <div id="output"></div>
+
+    <script>
+        const output = document.getElementById('output');
+        
+        function log(message) {
+            output.innerHTML += '<p>' + message + '</p>';
+            console.log(message);
+        }
+        
+        function getMainDomain(domains) {
+            // Find domain with isMainDomain: true
+            const mainDomain = domains.find(domain => domain.isMainDomain === true)
+            if (mainDomain) {
+                return mainDomain
+            }
+            // Fallback to first domain if no main domain is set
+            return domains[0]
+        }
+        
+        async function testDomainDisplay() {
+            try {
+                log('=== Testing Domain Display ===');
+                
+                const baseURL = 'http://localhost:3004/api/v1';
+                const hostingId = 'cmdkjaau8002tmm3x5hswwulk';
+                
+                // 1. Login
+                log('1. Logging in...');
+                const loginResponse = await axios.post(`${baseURL}/auth/login`, {
+                    email: 'admin@lagiah.com',
+                    password: 'admin123'
+                });
+                
+                const token = loginResponse.data.data.token;
+                log('✅ Login successful');
+                
+                // 2. Get hosting data
+                log('2. Getting hosting data...');
+                const getResponse = await axios.get(`${baseURL}/hosting/${hostingId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                log('✅ GET successful');
+                const hosting = getResponse.data.data;
+                
+                // 3. Analyze domain data
+                log('3. Analyzing domain data:');
+                log(`Hosting: ${hosting.name} (${hosting.provider})`);
+                log(`Total domains: ${hosting.domains.length}`);
+                
+                hosting.domains.forEach((domain, index) => {
+                    log(`  Domain ${index + 1}: ${domain.name}`);
+                    log(`    - ID: ${domain.id}`);
+                    log(`    - Status: ${domain.status}`);
+                    log(`    - isMainDomain: ${domain.isMainDomain}`);
+                    log(`    - hostingId: ${domain.hostingId}`);
+                    log(`    - vpsId: ${domain.vpsId}`);
+                });
+                
+                // 4. Test getMainDomain function
+                log('4. Testing getMainDomain function:');
+                const mainDomain = getMainDomain(hosting.domains);
+                log(`Main domain: ${mainDomain.name} (isMainDomain: ${mainDomain.isMainDomain})`);
+                
+                // 5. Test domain assignment through API
+                log('5. Testing domain assignment through API...');
+                const updateData = {
+                    name: hosting.name,
+                    provider: hosting.provider,
+                    status: hosting.status,
+                    planName: hosting.planName,
+                    cpanelUrl: hosting.cpanelUrl,
+                    username: hosting.username,
+                    password: "admin123",
+                    expiresAt: hosting.expiresAt,
+                    createdAt: hosting.createdAt,
+                    domainIds: hosting.domains.map(d => d.id)
+                };
+                
+                const updateResponse = await axios.put(`${baseURL}/hosting/${hostingId}`, updateData, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log('✅ PUT successful');
+                
+                // 6. Get updated hosting data
+                log('6. Getting updated hosting data...');
+                const updatedResponse = await axios.get(`${baseURL}/hosting/${hostingId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                log('✅ GET updated successful');
+                const updatedHosting = updatedResponse.data.data;
+                
+                // 7. Analyze updated domain data
+                log('7. Analyzing updated domain data:');
+                log(`Hosting: ${updatedHosting.name} (${updatedHosting.provider})`);
+                log(`Total domains: ${updatedHosting.domains.length}`);
+                
+                updatedHosting.domains.forEach((domain, index) => {
+                    log(`  Domain ${index + 1}: ${domain.name}`);
+                    log(`    - ID: ${domain.id}`);
+                    log(`    - Status: ${domain.status}`);
+                    log(`    - isMainDomain: ${domain.isMainDomain}`);
+                    log(`    - hostingId: ${domain.hostingId}`);
+                    log(`    - vpsId: ${domain.vpsId}`);
+                });
+                
+                // 8. Test getMainDomain function again
+                log('8. Testing getMainDomain function again:');
+                const updatedMainDomain = getMainDomain(updatedHosting.domains);
+                log(`Main domain: ${updatedMainDomain.name} (isMainDomain: ${updatedMainDomain.isMainDomain})`);
+                
+                // 9. Check if main domain logic is working
+                log('9. Checking main domain logic:');
+                const mainDomains = updatedHosting.domains.filter(d => d.isMainDomain === true);
+                log(`Domains with isMainDomain = true: ${mainDomains.length}`);
+                mainDomains.forEach(d => {
+                    log(`  - ${d.name} (${d.id})`);
+                });
+                
+                if (mainDomains.length === 1) {
+                    log('✅ Main domain logic is working correctly!');
+                } else if (mainDomains.length === 0) {
+                    log('❌ No main domain found!');
+                } else {
+                    log('❌ Multiple main domains found!');
+                }
+                
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+                if (error.response) {
+                    log('Status: ' + error.response.status);
+                    log('Data: ' + JSON.stringify(error.response.data));
+                }
+            }
+        }
+        
+        // Run test
+        testDomainDisplay();
+    </script>
+</body>
+</html> 
