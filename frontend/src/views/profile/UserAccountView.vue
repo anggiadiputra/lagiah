@@ -417,42 +417,42 @@ const formatDate = (dateString: string | undefined) => {
 
 const changeAvatar = () => {
   // TODO: Implement avatar change functionality
-  console.log('Change avatar clicked')
+  // Change avatar clicked
 }
 
 const updateProfile = async () => {
   isProfileLoading.value = true
   try {
-    console.log('Updating profile with:', { name: profileForm.name, email: profileForm.email })
+    // Updating profile
     
     const response = await apiService.put('/auth/profile', {
       name: profileForm.name,
       email: profileForm.email
     })
 
-    console.log('Profile update response:', response)
+    // Profile update response received
     
     // Handle response structure from API interceptor
     const responseData = response.data ? response.data : response
     
-    console.log('Profile update response data:', responseData)
+    // Profile update response data processed
     
     if (responseData.status === 'success') {
       // For profile update, responseData.data contains the updated user
       if (responseData.data && responseData.data.id) {
         authStore.user = responseData.data
-        console.log('Profile updated successfully')
+        // Profile updated successfully
         alert('Profile updated successfully!')
       } else {
-        console.log('Profile update response:', responseData.data)
+        // Profile update response processed
         alert('Profile updated successfully!')
       }
     } else {
-      console.error('Failed to update profile:', responseData.error?.message)
+      // Failed to update profile
       alert(`Failed to update profile: ${responseData.error?.message}`)
     }
   } catch (error) {
-    console.error('Error updating profile:', error)
+    // Error updating profile
     alert('Error updating profile. Please try again.')
   } finally {
     isProfileLoading.value = false
@@ -472,19 +472,19 @@ const changePassword = async () => {
   
   isPasswordLoading.value = true
   try {
-    console.log('Changing password...')
+    // Changing password
     
     const response = await apiService.post('/auth/change-password', {
       currentPassword: passwordForm.currentPassword,
       newPassword: passwordForm.newPassword
     })
 
-    console.log('Password change response:', response)
+    // Password change response received
     
     // Handle response structure from API interceptor
     const responseData = response.data ? response.data : response
     
-    console.log('Password change response data:', responseData)
+    // Password change response data processed
     
     if (responseData.status === 'success') {
       // Clear form
@@ -492,14 +492,14 @@ const changePassword = async () => {
       passwordForm.newPassword = ''
       passwordForm.confirmPassword = ''
       
-      console.log('Password changed successfully')
+      // Password changed successfully
       alert('Password changed successfully! You can now use your new password to login.')
     } else {
-      console.error('Failed to change password:', responseData.error?.message)
+      // Failed to change password
       alert(`Failed to change password: ${responseData.error?.message}`)
     }
   } catch (error) {
-    console.error('Error changing password:', error)
+    // Error changing password
     alert('Error changing password. Please try again.')
   } finally {
     isPasswordLoading.value = false
@@ -513,7 +513,7 @@ const terminateAllSessions = async () => {
   
   isTerminatingSessions.value = true
   try {
-    console.log('Terminating all sessions...')
+    // Terminating all sessions
     
     // TODO: Implement API call to terminate all sessions
     const response = await apiService.post('/auth/terminate-sessions')
@@ -526,14 +526,12 @@ const terminateAllSessions = async () => {
       alert('Failed to terminate sessions. Please try again.')
     }
   } catch (error) {
-    console.error('Error terminating sessions:', error)
+    // Error terminating sessions
     alert('Error terminating sessions. Please try again.')
   } finally {
     isTerminatingSessions.value = false
   }
 }
-
-
 
 const deleteAccount = async () => {
   if (deleteConfirmText.value !== 'DELETE') {
@@ -543,7 +541,7 @@ const deleteAccount = async () => {
   
   try {
     // TODO: Implement account deletion API call
-    console.log('Deleting account...')
+    // Deleting account
     
     const response = await apiService.delete('/auth/account')
     
@@ -555,7 +553,7 @@ const deleteAccount = async () => {
       alert('Failed to delete account. Please try again.')
     }
   } catch (error) {
-    console.error('Error deleting account:', error)
+    // Error deleting account
     alert('Error deleting account. Please try again.')
   }
 }
@@ -565,7 +563,7 @@ const updateFormData = () => {
   if (authStore.user) {
     profileForm.name = authStore.user.name || ''
     profileForm.email = authStore.user.email || ''
-    console.log('Form data updated:', { name: profileForm.name, email: profileForm.email })
+    // Form data updated
   }
 }
 

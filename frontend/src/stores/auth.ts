@@ -47,132 +47,102 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     error.value = null
     
-    try {
-      // Call the real API through adapter
-      console.log('Attempting login with:', credentials.email)
-      
-      // Add retry logic for network errors
-      let retries = 3;
-      let response;
-      
-      while (retries > 0) {
-        try {
-          response = await api.login(credentials);
-          break; // If successful, exit the retry loop
-        } catch (err: any) {
-          if (err.message === 'Unable to connect to the server. Please check your internet connection.' && retries > 1) {
-            console.log(`Connection error, retrying... (${retries-1} attempts left)`);
-            retries--;
-            // Wait before retrying
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          } else {
-            throw err; // Re-throw if not a connection error or no retries left
-          }
+    let retries = 3
+    while (retries > 0) {
+      try {
+        // Attempting login
+        const response = await api.post('/auth/login', credentials)
+        
+        if (response.status === 503 && retries > 1) {
+          // Connection error, retrying
+          retries--
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          continue
         }
-      }
-      
-      console.log('Login response:', response)
-      
-      // Handle both response formats (direct data or nested in response.data)
-      const responseData = response.data ? response.data : response
-      
-      console.log('Response data structure:', responseData)
-      console.log('ResponseData.data:', responseData.data)
-      console.log('ResponseData.data.token:', responseData.data?.token)
-      console.log('ResponseData.token:', responseData.token)
-      
-      // Check if response has token (backend success indicator)
-      // API returns: { status: 'success', data: { user: {...}, token: '...' } }
-      // But response interceptor already extracts data, so we get: { user: {...}, token: '...' }
-      if (responseData && responseData.token) {
-        // Set user and token from API response
-        user.value = responseData.user
-        token.value = responseData.token
         
-        console.log('Login successful, user:', responseData.user)
-        console.log('Token received:', responseData.token ? 'yes' : 'no')
+        // Login response received
         
-        // Store token in localStorage
-        if (token.value) {
-          localStorage.setItem('auth_token', token.value)
-          console.log('Token saved to localStorage')
+        // Handle both response formats
+        const responseData = response.data ? response.data : response
+        // Response data structure
+        // ResponseData.data
+        // ResponseData.data.token
+        // ResponseData.token
+        
+        if (responseData.status === 'success' && responseData.user && responseData.token) {
+          // Login successful, user loaded
+          // Token received
+          user.value = responseData.user
+          token.value = responseData.token
+          
+          // Save token to localStorage
+          // Token saved to localStorage
+          localStorage.setItem('auth_token', responseData.token)
+          
+          return { status: 'success', user: responseData.user }
         } else {
-          console.error('Token is null, cannot save to localStorage')
+          // Token is null, cannot save to localStorage
+          // Login failed: No token received
+          error.value = 'Invalid login response from server'
+          return { status: 'error', message: error.value }
+        }
+      } catch (err: any) {
+        // Login error
+        if (err.response?.status === 503 && retries > 1) {
+          retries--
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          continue
         }
         
-        return { success: true }
-      } else {
-        error.value = 'Login failed'
-        console.error('Login failed: No token received')
-        return { success: false, error: error.value }
+        error.value = err.response?.data?.message || err.message || 'Login failed'
+        return { status: 'error', message: error.value, error: err }
       }
-    } catch (err: any) {
-      console.error('Login error:', err)
-      error.value = err.message || 'Login failed'
-      return { success: false, error: error.value }
-    } finally {
-      loading.value = false
     }
+    
+    error.value = 'Service temporarily unavailable. Please try again later.'
+    return { status: 'error', message: error.value }
   }
 
   async function logout() {
-    loading.value = true
-    
     try {
-      // Clear state
-      user.value = null
-      token.value = null
-      
-      // Clear localStorage
-      localStorage.removeItem('auth_token')
-      localStorage.removeItem('auth_remember')
-      
-      // No need to clear axios defaults since we're using API adapter
-      
-      return { success: true }
+      await api.post('/auth/logout')
+      clearAuth()
+      return { status: 'success' }
     } catch (err: any) {
-      console.error('Logout error:', err)
-      return { success: false, error: err.message }
-    } finally {
-      loading.value = false
+      // Logout error
+      clearAuth()
+      return { status: 'error', message: err.message, error: err }
     }
   }
 
-  async function initialize() {
+  async function fetchUserProfile() {
     const storedToken = localStorage.getItem('auth_token')
     
-    if (storedToken) {
-      token.value = storedToken
+    if (!storedToken) {
+      // No stored token found, user is not logged in
+      return null
+    }
+    
+    try {
+      // Fetching user profile with stored token
+      const response = await api.get('/auth/me')
+      // Profile response received
       
-      try {
-        // Fetch user data from API
-        console.log('Fetching user profile with stored token')
-        const response = await api.getProfile()
-        console.log('Profile response:', response)
-        
-        // Handle both response formats (direct data or nested in response.data)
-        const responseData = response.data ? response.data : response
-        
-        console.log('Profile response data structure:', responseData)
-        
-        // Check if we got user data
-        // API returns: { status: 'success', data: { user: {...} } }
-        // But response interceptor already extracts data, so we get: { user: {...} }
-        if (responseData && responseData.user) {
-          user.value = responseData.user
-          console.log('User profile loaded successfully')
-        } else {
-          console.error('Invalid profile response format:', responseData)
-          // Token is invalid, clear it
-          await logout()
-        }
-      } catch (err) {
-        console.error('Failed to fetch user profile:', err)
-        // Token is invalid, clear it
-        await logout()
+      // Handle both response formats
+      const responseData = response.data ? response.data : response
+      // Profile response data structure
+      
+      if (responseData.status === 'success' && responseData.data) {
+        // User profile loaded successfully
+        user.value = responseData.data
+        return responseData.data
+      } else {
+        // Invalid profile response format
+        return null
       }
-    } else {
-      console.log('No stored token found, user is not logged in')
+    } catch (err: any) {
+      // Failed to fetch user profile
+      return null
     }
   }
   

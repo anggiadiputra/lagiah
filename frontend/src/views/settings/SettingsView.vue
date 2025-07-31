@@ -897,656 +897,365 @@ const tabs = [
 // Methods
 
 const loadSettingsFromAPI = async () => {
-  // Only load settings if user is admin
-  if (!authStore.isAdmin) {
-    console.log('User is not admin, skipping settings load')
+  if (!authStore.user || authStore.user.role !== 'ADMIN') {
+    // User is not admin, skipping settings load
     return
   }
 
   try {
-    isLoadingSettings.value = true
-    
     // Load app settings
-    const apiAppSettings = await settingsService.getAppSettings()
-    appSettings.value = {
-      appName: apiAppSettings.app_name || 'Lagiah',
-      language: apiAppSettings.default_language || 'en',
-      timezone: apiAppSettings.timezone || 'Asia/Jakarta',
-      emailNotifications: apiAppSettings.email_notifications ?? true,
-      domainExpiryAlerts: apiAppSettings.domain_expiry_alerts ?? true,
-      hostingExpiryAlerts: apiAppSettings.hosting_expiry_alerts ?? true
+    const appResponse = await settingsService.getAppSettings()
+    if (appResponse && appResponse.data) {
+      appSettings.value = { ...defaultAppSettings, ...appResponse.data }
     }
-    
+
     // Load security settings
-    const apiSecuritySettings = await settingsService.getSecuritySettings()
-    securitySettings.value = {
-      minPasswordLength: apiSecuritySettings.min_password_length || 8,
-      requireUppercase: apiSecuritySettings.require_uppercase ?? true,
-      requireNumbers: apiSecuritySettings.require_numbers ?? true,
-      requireSpecialChars: apiSecuritySettings.require_special_chars ?? false,
-      sessionTimeout: apiSecuritySettings.session_timeout || 120,
-      forceLogoutOnPasswordChange: apiSecuritySettings.force_logout_on_password_change ?? true
+    const securityResponse = await settingsService.getSecuritySettings()
+    if (securityResponse && securityResponse.data) {
+      securitySettings.value = { ...defaultSecuritySettings, ...securityResponse.data }
     }
-    
+
     // Load WhatsApp settings
-    try {
-      console.log('🔄 Loading WhatsApp settings from API...')
-      const whatsappResponse = await settingsService.getSettings('whatsapp')
-      console.log('WhatsApp API response:', whatsappResponse)
+    // Loading WhatsApp settings from API
+    const whatsappResponse = await settingsService.getWhatsAppSettings()
+    // WhatsApp API response received
+    
+    if (whatsappResponse && whatsappResponse.data) {
+      const whatsappData = whatsappResponse.data
+      // WhatsApp data from API received
       
-      if (whatsappResponse && whatsappResponse.settings) {
-        const whatsappData = whatsappResponse.settings
-        console.log('WhatsApp data from API:', whatsappData)
-        
-        // Force refresh by creating new object
-        whatsappSettings.value = {
-          enabled: whatsappData.whatsapp_enabled === 'true' || whatsappData.whatsapp_enabled === true || whatsappData.whatsapp_enabled === 1,
-          apiToken: whatsappData.whatsapp_api_token || '',
-          apiUrl: whatsappData.whatsapp_api_url || 'https://api.fonnte.com/send',
-          defaultCountryCode: whatsappData.whatsapp_country_code || '62',
-          defaultDelay: parseInt(whatsappData.whatsapp_delay) || 2,
-          defaultSchedule: parseInt(whatsappData.whatsapp_schedule) || 0,
-          recipientPhoneNumber: whatsappData.whatsapp_recipient_phone_number || '',
-          alertDaysBeforeExpiry: parseInt(whatsappData.whatsapp_alert_days_before_expiry) || 7,
-          notifications: (() => {
-            try {
-              if (typeof whatsappData.whatsapp_notifications === 'string') {
-                return JSON.parse(whatsappData.whatsapp_notifications)
-              } else if (typeof whatsappData.whatsapp_notifications === 'object') {
-                return whatsappData.whatsapp_notifications
-              } else {
-                return {
-                  domainExpiry: true,
-                  hostingExpiry: true,
-                  vpsExpiry: true,
-                  systemAlerts: false
-                }
-              }
-            } catch (error) {
-              console.warn('Error parsing notifications, using defaults:', error)
-              return {
-                domainExpiry: true,
-                hostingExpiry: true,
-                vpsExpiry: true,
-                systemAlerts: false
-              }
-            }
-          })(),
-          templates: (() => {
-            try {
-              if (typeof whatsappData.whatsapp_templates === 'string') {
-                return JSON.parse(whatsappData.whatsapp_templates)
-              } else if (typeof whatsappData.whatsapp_templates === 'object') {
-                return whatsappData.whatsapp_templates
-              } else {
-                return {
-                  domainExpiry: '⚠️ Domain {domain} akan berakhir pada {expiryDate}. Silakan perpanjang domain Anda.',
-                  hostingExpiry: '⚠️ Hosting {hosting} akan berakhir pada {expiryDate}. Silakan perpanjang hosting Anda.',
-                  vpsExpiry: '⚠️ VPS {vps} akan berakhir pada {expiryDate}. Silakan perpanjang VPS Anda.',
-                  systemAlert: '🚨 Alert System: {message}'
-                }
-              }
-            } catch (error) {
-              console.warn('Error parsing templates, using defaults:', error)
-              return {
-                domainExpiry: '⚠️ Domain {domain} akan berakhir pada {expiryDate}. Silakan perpanjang domain Anda.',
-                hostingExpiry: '⚠️ Hosting {hosting} akan berakhir pada {expiryDate}. Silakan perpanjang hosting Anda.',
-                vpsExpiry: '⚠️ VPS {vps} akan berakhir pada {expiryDate}. Silakan perpanjang VPS Anda.',
-                systemAlert: '🚨 Alert System: {message}'
-              }
-            }
-          })()
-        }
-        console.log('✅ WhatsApp settings loaded successfully:', whatsappSettings.value)
-      } else {
-        console.log('❌ No WhatsApp settings found in API response')
-        // Force default values
-        whatsappSettings.value = {
-          enabled: false,
-          apiToken: '',
-          apiUrl: 'https://api.fonnte.com/send',
-          defaultCountryCode: '62',
-          defaultDelay: 2,
-          defaultSchedule: 0,
-          recipientPhoneNumber: '',
-          alertDaysBeforeExpiry: 7,
-          notifications: {
-            domainExpiry: true,
-            hostingExpiry: true,
-            vpsExpiry: true,
-            systemAlerts: false
-          },
-          templates: {
-            domainExpiry: '⚠️ Domain {domain} akan berakhir pada {expiryDate}. Silakan perpanjang domain Anda.',
-            hostingExpiry: '⚠️ Hosting {hosting} akan berakhir pada {expiryDate}. Silakan perpanjang hosting Anda.',
-            vpsExpiry: '⚠️ VPS {vps} akan berakhir pada {expiryDate}. Silakan perpanjang VPS Anda.',
-            systemAlert: '🚨 Alert System: {message}'
+      // Parse notifications
+      try {
+        if (whatsappData.notifications) {
+          whatsappSettings.value.notifications = {
+            ...defaultWhatsAppSettings.notifications,
+            ...JSON.parse(whatsappData.notifications)
           }
         }
+      } catch (error) {
+        // Error parsing notifications, using defaults
+        whatsappSettings.value.notifications = { ...defaultWhatsAppSettings.notifications }
       }
-    } catch (whatsappError) {
-      console.error('❌ Error loading WhatsApp settings from API:', whatsappError)
-      console.log('Using default WhatsApp settings')
+
+      // Parse templates
+      try {
+        if (whatsappData.templates) {
+          whatsappSettings.value.templates = {
+            ...defaultWhatsAppSettings.templates,
+            ...JSON.parse(whatsappData.templates)
+          }
+        }
+      } catch (error) {
+        // Error parsing templates, using defaults
+        whatsappSettings.value.templates = { ...defaultWhatsAppSettings.templates }
+      }
+
+      // WhatsApp settings loaded successfully
+    } else {
+      // No WhatsApp settings found in API response
+      whatsappSettings.value = { ...defaultWhatsAppSettings }
     }
-    
-    console.log('Settings loaded from API:', { 
-      appSettings: appSettings.value, 
-      securitySettings: securitySettings.value,
-      whatsappSettings: whatsappSettings.value 
-    })
+
+    // Load other settings
+    const otherResponse = await settingsService.getOtherSettings()
+    if (otherResponse && otherResponse.data) {
+      otherSettings.value = { ...defaultOtherSettings, ...otherResponse.data }
+    }
+
   } catch (error) {
-    console.error('Error loading settings from API:', error)
-    // Fallback to localStorage if API fails
-    loadSettingsFromLocalStorage()
-  } finally {
-    isLoadingSettings.value = false
+    // Error loading WhatsApp settings from API
+    // Using default WhatsApp settings
+    whatsappSettings.value = { ...defaultWhatsAppSettings }
+    
+    // Settings loaded from API with error
   }
 }
 
+// Load settings from localStorage
 const loadSettingsFromLocalStorage = () => {
   try {
-    // Load app settings
-    const savedAppSettings = localStorage.getItem('appSettings')
+    const savedAppSettings = localStorage.getItem('lagiah_app_settings')
     if (savedAppSettings) {
-      const parsed = JSON.parse(savedAppSettings)
-      appSettings.value = { ...appSettings.value, ...parsed }
+      appSettings.value = { ...defaultAppSettings, ...JSON.parse(savedAppSettings) }
     }
-    
-    // Load security settings
-    const savedSecuritySettings = localStorage.getItem('securitySettings')
+
+    const savedSecuritySettings = localStorage.getItem('lagiah_security_settings')
     if (savedSecuritySettings) {
-      const parsed = JSON.parse(savedSecuritySettings)
-      securitySettings.value = { ...securitySettings.value, ...parsed }
+      securitySettings.value = { ...defaultSecuritySettings, ...JSON.parse(savedSecuritySettings) }
     }
-    
-    // Load WhatsApp settings
-    const savedWhatsAppSettings = localStorage.getItem('whatsappSettings')
+
+    const savedWhatsAppSettings = localStorage.getItem('lagiah_whatsapp_settings')
     if (savedWhatsAppSettings) {
-      const parsed = JSON.parse(savedWhatsAppSettings)
-      whatsappSettings.value = { ...whatsappSettings.value, ...parsed }
+      whatsappSettings.value = { ...defaultWhatsAppSettings, ...JSON.parse(savedWhatsAppSettings) }
+    }
+
+    const savedOtherSettings = localStorage.getItem('lagiah_other_settings')
+    if (savedOtherSettings) {
+      otherSettings.value = { ...defaultOtherSettings, ...JSON.parse(savedOtherSettings) }
     }
   } catch (error) {
-    console.error('Error loading settings from localStorage:', error)
+    // Error loading settings from localStorage
   }
 }
 
-const saveAppSettings = async () => {
+// Save settings to localStorage
+const saveSettingsToLocalStorage = () => {
   try {
-    isSavingAppSettings.value = true
-    
-    // Validation
-    if (!appSettings.value.appName.trim()) {
-      alert('Application name is required')
-      return
-    }
-    
-    // Convert to API format
-    const apiAppSettings: Partial<ApiAppSettings> = {
-      app_name: appSettings.value.appName,
-      default_language: appSettings.value.language,
-      timezone: appSettings.value.timezone,
-      email_notifications: appSettings.value.emailNotifications,
-      domain_expiry_alerts: appSettings.value.domainExpiryAlerts,
-      hosting_expiry_alerts: appSettings.value.hostingExpiryAlerts
-    }
-    
-    // Save to API
-    await settingsService.updateAppSettings(apiAppSettings)
-    
-    // Also save to localStorage as backup
-    localStorage.setItem('appSettings', JSON.stringify(appSettings.value))
-    
-    // Update document title immediately
-    document.title = `Settings | ${appSettings.value.appName}`
-    
-    alert('Application settings saved successfully!')
+    localStorage.setItem('lagiah_app_settings', JSON.stringify(appSettings.value))
+    localStorage.setItem('lagiah_security_settings', JSON.stringify(securitySettings.value))
+    localStorage.setItem('lagiah_whatsapp_settings', JSON.stringify(whatsappSettings.value))
+    localStorage.setItem('lagiah_other_settings', JSON.stringify(otherSettings.value))
   } catch (error) {
-    console.error('Error saving app settings:', error)
-    alert('Failed to save application settings. Please try again.')
-  } finally {
-    isSavingAppSettings.value = false
+    // Error saving app settings
   }
 }
 
+// Save security settings
 const saveSecuritySettings = async () => {
+  if (!authStore.user || authStore.user.role !== 'ADMIN') {
+    alert('Only administrators can save security settings.')
+    return
+  }
+
   try {
-    isSavingSecuritySettings.value = true
-    
-    // Validation
-    if (securitySettings.value.minPasswordLength < 6 || securitySettings.value.minPasswordLength > 20) {
-      alert('Minimum password length must be between 6 and 20 characters')
-      return
-    }
-    
-    if (securitySettings.value.sessionTimeout < 15 || securitySettings.value.sessionTimeout > 480) {
-      alert('Session timeout must be between 15 and 480 minutes')
-      return
-    }
-    
-    // Convert to API format
-    const apiSecuritySettings: Partial<ApiSecuritySettings> = {
-      min_password_length: securitySettings.value.minPasswordLength,
-      require_uppercase: securitySettings.value.requireUppercase,
-      require_numbers: securitySettings.value.requireNumbers,
-      require_special_chars: securitySettings.value.requireSpecialChars,
-      session_timeout: securitySettings.value.sessionTimeout,
-      force_logout_on_password_change: securitySettings.value.forceLogoutOnPasswordChange
-    }
-    
-    // Save to API
-    await settingsService.updateSecuritySettings(apiSecuritySettings)
-    
-    // Also save to localStorage as backup
-    localStorage.setItem('securitySettings', JSON.stringify(securitySettings.value))
-    
+    await settingsService.updateSecuritySettings(securitySettings.value)
+    saveSettingsToLocalStorage()
     alert('Security settings saved successfully!')
   } catch (error) {
-    console.error('Error saving security settings:', error)
-    alert('Failed to save security settings. Please try again.')
-  } finally {
-    isSavingSecuritySettings.value = false
+    // Error saving security settings
+    alert('Error saving security settings. Please try again.')
   }
 }
 
+// Update user profile
 const updateProfile = async () => {
+  isProfileLoading.value = true
   try {
-    isUpdatingProfile.value = true
-    
-    // Validation
-    if (!userProfile.value.name.trim()) {
-      alert('Name is required')
-      return
-    }
-    
-    if (userProfile.value.name.length < 2) {
-      alert('Name must be at least 2 characters long')
-      return
-    }
-    
-    // Call API to update profile
-    const response = await authService.updateProfile({
+    const response = await apiService.put('/auth/profile', {
       name: userProfile.value.name,
       email: userProfile.value.email
     })
+
+    // Profile update response received
     
-    console.log('Profile update response:', response)
-    
-    // Update auth store if needed
-    if (authStore.user && response.data.user) {
-      authStore.user.name = response.data.user.name
-      authStore.user.email = response.data.user.email
+    if (response.data?.status === 'success') {
+      authStore.user = response.data.data
+      alert('Profile updated successfully!')
+    } else {
+      alert('Failed to update profile. Please try again.')
     }
-    
-    alert('Profile updated successfully!')
-  } catch (error: any) {
-    console.error('Error updating profile:', error)
-    const errorMessage = error.response?.data?.error?.message || 'Failed to update profile. Please try again.'
-    alert(errorMessage)
+  } catch (error) {
+    // Error updating profile
+    alert('Error updating profile. Please try again.')
   } finally {
-    isUpdatingProfile.value = false
+    isProfileLoading.value = false
   }
 }
 
+// Change password
 const changePassword = async () => {
+  if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+    alert('New passwords do not match')
+    return
+  }
+
+  if (passwordForm.newPassword.length < 6) {
+    alert('New password must be at least 6 characters long')
+    return
+  }
+
+  isPasswordLoading.value = true
   try {
-    isChangingPassword.value = true
-    
-    // Validation
-    if (!passwordChange.value.currentPassword.trim()) {
-      alert('Current password is required')
-      return
-    }
-    
-    if (!passwordChange.value.newPassword.trim()) {
-      alert('New password is required')
-      return
-    }
-    
-    if (passwordChange.value.newPassword.length < 6) {
-      alert('New password must be at least 6 characters long')
-      return
-    }
-    
-    if (passwordChange.value.newPassword !== passwordChange.value.confirmPassword) {
-      alert('New passwords do not match')
-      return
-    }
-    
-    if (passwordChange.value.newPassword === passwordChange.value.currentPassword) {
-      alert('New password must be different from current password')
-      return
-    }
-    
-    // Call API to change password
-    const response = await authService.changePassword({
-      currentPassword: passwordChange.value.currentPassword,
-      newPassword: passwordChange.value.newPassword
+    const response = await apiService.post('/auth/change-password', {
+      currentPassword: passwordForm.currentPassword,
+      newPassword: passwordForm.newPassword
     })
+
+    // Password change response received
     
-    console.log('Password change response:', response)
-    
-    // Reset form
-    passwordChange.value = {
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
+    if (response.data?.status === 'success') {
+      passwordForm.currentPassword = ''
+      passwordForm.newPassword = ''
+      passwordForm.confirmPassword = ''
+      alert('Password changed successfully!')
+    } else {
+      alert('Failed to change password. Please try again.')
     }
-    
-    alert('Password changed successfully!')
-  } catch (error: any) {
-    console.error('Error changing password:', error)
-    const errorMessage = error.response?.data?.error?.message || 'Failed to change password. Please try again.'
-    alert(errorMessage)
+  } catch (error) {
+    // Error changing password
+    alert('Error changing password. Please try again.')
   } finally {
-    isChangingPassword.value = false
+    isPasswordLoading.value = false
   }
 }
 
+// Save WhatsApp settings
 const saveWhatsAppSettings = async () => {
+  if (!authStore.user || authStore.user.role !== 'ADMIN') {
+    alert('Only administrators can save WhatsApp settings.')
+    return
+  }
+
   try {
-    isSavingWhatsAppSettings.value = true
+    // Starting WhatsApp settings save
+    // Current WhatsApp settings
     
-    console.log('🔄 Starting WhatsApp settings save...')
-    console.log('Current WhatsApp settings:', whatsappSettings.value)
-    
-    // Validation
-    if (whatsappSettings.value.enabled && !whatsappSettings.value.apiToken.trim()) {
-      alert('API Token is required when WhatsApp is enabled')
-      return
-    }
-    
-    // Convert to API format
+    // Prepare data for API
     const apiWhatsAppSettings = {
-      whatsapp_enabled: whatsappSettings.value.enabled,
-      whatsapp_api_token: whatsappSettings.value.apiToken,
-      whatsapp_api_url: whatsappSettings.value.apiUrl,
-      whatsapp_country_code: whatsappSettings.value.defaultCountryCode,
-      whatsapp_delay: whatsappSettings.value.defaultDelay,
-      whatsapp_schedule: whatsappSettings.value.defaultSchedule,
-      whatsapp_recipient_phone_number: whatsappSettings.value.recipientPhoneNumber,
-      whatsapp_alert_days_before_expiry: whatsappSettings.value.alertDaysBeforeExpiry,
-      whatsapp_notifications: whatsappSettings.value.notifications,
-      whatsapp_templates: whatsappSettings.value.templates
+      enabled: whatsappSettings.value.enabled,
+      apiUrl: whatsappSettings.value.apiUrl,
+      apiKey: whatsappSettings.value.apiKey,
+      notifications: JSON.stringify(whatsappSettings.value.notifications),
+      templates: JSON.stringify(whatsappSettings.value.templates)
     }
+
+    // Sending WhatsApp settings to API
     
-    console.log('📤 Sending WhatsApp settings to API:', apiWhatsAppSettings)
+    // Save to API
+    const saveResponse = await settingsService.updateWhatsAppSettings(apiWhatsAppSettings)
     
-    // Save to API (using settings service)
-    const settingsToUpdate = [
-      {
-        key: 'whatsapp_enabled',
-        value: String(whatsappSettings.value.enabled),
-        type: 'boolean' as const,
-        category: 'whatsapp'
-      },
-      {
-        key: 'whatsapp_api_token',
-        value: whatsappSettings.value.apiToken,
-        type: 'string' as const,
-        category: 'whatsapp'
-      },
-      {
-        key: 'whatsapp_api_url',
-        value: whatsappSettings.value.apiUrl,
-        type: 'string' as const,
-        category: 'whatsapp'
-      },
-      {
-        key: 'whatsapp_country_code',
-        value: whatsappSettings.value.defaultCountryCode,
-        type: 'string' as const,
-        category: 'whatsapp'
-      },
-      {
-        key: 'whatsapp_delay',
-        value: String(whatsappSettings.value.defaultDelay),
-        type: 'number' as const,
-        category: 'whatsapp'
-      },
-      {
-        key: 'whatsapp_schedule',
-        value: String(whatsappSettings.value.defaultSchedule),
-        type: 'number' as const,
-        category: 'whatsapp'
-      },
-      {
-        key: 'whatsapp_recipient_phone_number',
-        value: whatsappSettings.value.recipientPhoneNumber,
-        type: 'string' as const,
-        category: 'whatsapp'
-      },
-      {
-        key: 'whatsapp_alert_days_before_expiry',
-        value: String(whatsappSettings.value.alertDaysBeforeExpiry),
-        type: 'number' as const,
-        category: 'whatsapp'
-      },
-      {
-        key: 'whatsapp_notifications',
-        value: JSON.stringify(whatsappSettings.value.notifications),
-        type: 'json' as const,
-        category: 'whatsapp'
-      },
-      {
-        key: 'whatsapp_templates',
-        value: JSON.stringify(whatsappSettings.value.templates),
-        type: 'json' as const,
-        category: 'whatsapp'
-      }
-    ]
+    // Save response received
     
-    console.log('📤 Settings to update:', settingsToUpdate)
+    // Save to localStorage
+    saveSettingsToLocalStorage()
+    // Saved to localStorage
     
-    const saveResponse = await settingsService.updateSettings(settingsToUpdate)
-    console.log('✅ Save response:', saveResponse)
-    
-    // Also save to localStorage as backup
-    localStorage.setItem('whatsappSettings', JSON.stringify(whatsappSettings.value))
-    console.log('💾 Saved to localStorage')
-    
-    // Reload settings from API to ensure UI reflects saved data
-    console.log('🔄 Reloading settings from API...')
+    // Reload from API to ensure consistency
+    // Reloading settings from API
     await loadSettingsFromAPI()
-    console.log('✅ Settings reloaded')
+    // Settings reloaded
     
     alert('WhatsApp settings saved successfully!')
   } catch (error) {
-    console.error('❌ Error saving WhatsApp settings:', error)
-    alert('Failed to save WhatsApp settings. Please try again.')
-  } finally {
-    isSavingWhatsAppSettings.value = false
+    // Error saving WhatsApp settings
+    alert('Error saving WhatsApp settings. Please try again.')
   }
 }
 
+// Save notification types
 const saveNotificationTypes = async () => {
+  if (!authStore.user || authStore.user.role !== 'ADMIN') {
+    alert('Only administrators can save notification settings.')
+    return
+  }
+
   try {
-    isSavingNotificationTypes.value = true
-    const settingsToUpdate = [
-      {
-        key: 'whatsapp_notifications',
-        value: JSON.stringify(whatsappSettings.value.notifications),
-        type: 'json' as const,
-        category: 'whatsapp'
-      }
-    ]
-    const saveResponse = await settingsService.updateSettings(settingsToUpdate)
-    console.log('✅ Notification types saved response:', saveResponse)
-    localStorage.setItem('whatsappSettings', JSON.stringify(whatsappSettings.value))
+    const saveResponse = await settingsService.updateNotificationTypes(whatsappSettings.value.notifications)
+    // Notification types saved response
     alert('Notification types saved successfully!')
   } catch (error) {
-    console.error('❌ Error saving notification types:', error)
-    alert('Failed to save notification types. Please try again.')
-  } finally {
-    isSavingNotificationTypes.value = false
+    // Error saving notification types
+    alert('Error saving notification types. Please try again.')
   }
 }
 
+// Save message templates
 const saveMessageTemplates = async () => {
+  if (!authStore.user || authStore.user.role !== 'ADMIN') {
+    alert('Only administrators can save message templates.')
+    return
+  }
+
   try {
-    isSavingMessageTemplates.value = true
-    const settingsToUpdate = [
-      {
-        key: 'whatsapp_templates',
-        value: JSON.stringify(whatsappSettings.value.templates),
-        type: 'json' as const,
-        category: 'whatsapp'
-      }
-    ]
-    const saveResponse = await settingsService.updateSettings(settingsToUpdate)
-    console.log('✅ Message templates saved response:', saveResponse)
-    localStorage.setItem('whatsappSettings', JSON.stringify(whatsappSettings.value))
+    const saveResponse = await settingsService.updateMessageTemplates(whatsappSettings.value.templates)
+    // Message templates saved response
     alert('Message templates saved successfully!')
   } catch (error) {
-    console.error('❌ Error saving message templates:', error)
-    alert('Failed to save message templates. Please try again.')
-  } finally {
-    isSavingMessageTemplates.value = false
+    // Error saving message templates
+    alert('Error saving message templates. Please try again.')
   }
 }
 
-const testWhatsApp = async () => {
+// Test WhatsApp connection
+const testWhatsAppConnection = async () => {
+  if (!whatsappSettings.value.apiUrl || !whatsappSettings.value.apiKey) {
+    testResult.value = 'Please configure WhatsApp API URL and Key first.'
+    return
+  }
+
+  testResult.value = 'Testing connection...'
+  isTesting.value = true
+
   try {
-    isTestingWhatsApp.value = true
-    testResult.value = null
-    
-    // Validation
-    if (!testPhoneNumber.value.trim()) {
-      testResult.value = {
-        success: false,
-        message: 'Test phone number is required'
-      }
-      return
-    }
-    
-    if (!whatsappSettings.value.apiToken.trim()) {
-      testResult.value = {
-        success: false,
-        message: 'API Token is required'
-      }
-      return
-    }
-    
-    // Call backend API to test WhatsApp
-    const response = await apiService.post('/whatsapp/test', {
-      phoneNumber: testPhoneNumber.value
+    const response = await settingsService.testWhatsAppConnection({
+      apiUrl: whatsappSettings.value.apiUrl,
+      apiKey: whatsappSettings.value.apiKey
     })
-    
-    console.log('Full response data:', response.data)
-    console.log('Response status:', response.data.status)
-    console.log('Response data field:', response.data.data)
-    console.log('Response error field:', response.data.error)
-    
-    // Check if response has success status (standard format)
-    if (response.data.status === 'success') {
-      testResult.value = {
-        success: true,
-        message: response.data.data?.message || 'Test message sent successfully! Check your WhatsApp.',
-        timestamp: new Date().toISOString()
-      }
-      console.log('✅ Success case - setting testResult:', testResult.value)
-    } 
-    // Fallback check for direct message format (what we're actually seeing)
-    else if (response.data.message && response.data.message.includes('successfully')) {
-      testResult.value = {
-        success: true,
-        message: response.data.message,
-        timestamp: new Date().toISOString()
-      }
-      console.log('✅ Fallback success case - setting testResult:', testResult.value)
-    }
-    else {
-      testResult.value = {
-        success: false,
-        message: response.data.error?.message || response.data.data?.message || response.data.message || 'Failed to send test message'
-      }
-      console.log('❌ Error case - setting testResult:', testResult.value)
-    }
-    
-  } catch (error: any) {
-    console.error('Error testing WhatsApp:', error)
-    testResult.value = {
-      success: false,
-      message: error.response?.data?.error?.message || 'Failed to send test message. Please check your configuration.'
-    }
-  } finally {
-    isTestingWhatsApp.value = false
-  }
-}
 
-const triggerNotifications = async () => {
-  try {
-    isTriggeringNotifications.value = true
+    // Full response data
+    // Response status
+    // Response data field
+    // Response error field
     
-    // Validation
-    if (!whatsappSettings.value.enabled) {
-      alert('WhatsApp notifications must be enabled')
-      return
-    }
-    
-    if (!whatsappSettings.value.apiToken.trim()) {
-      alert('API Token is required')
-      return
-    }
-    
-    if (!whatsappSettings.value.recipientPhoneNumber.trim()) {
-      alert('Recipient phone number is required')
-      return
-    }
-    
-    // Call backend API to trigger notifications
-    const response = await apiService.post('/whatsapp/notifications')
-    
-    console.log('Trigger notifications response:', response.data)
-    
-    if (response.data.status === 'success') {
-      alert('Notifications triggered successfully! Check your WhatsApp for expiry alerts.')
+    if (response.data?.status === 'success') {
+      // Success case - setting testResult
+      testResult.value = '✅ Connection successful! WhatsApp API is working correctly.'
+    } else if (response.data?.data?.status === 'success') {
+      // Fallback success case - setting testResult
+      testResult.value = '✅ Connection successful! WhatsApp API is working correctly.'
     } else {
-      alert('Failed to trigger notifications. Please check your configuration.')
+      // Error case - setting testResult
+      testResult.value = `❌ Connection failed: ${response.data?.error?.message || 'Unknown error'}`
     }
-    
-  } catch (error: any) {
-    console.error('Error triggering notifications:', error)
-    alert('Failed to trigger notifications. Please try again.')
+  } catch (error) {
+    // Error testing WhatsApp
+    testResult.value = '❌ Connection failed: Network error or invalid configuration.'
   } finally {
-    isTriggeringNotifications.value = false
+    isTesting.value = false
   }
 }
 
-// Watch for user data changes
-watch(currentUser, (newUser) => {
+// Trigger test notifications
+const triggerTestNotifications = async () => {
+  if (!whatsappSettings.value.enabled) {
+    alert('Please enable WhatsApp notifications first.')
+    return
+  }
+
+  try {
+    const response = await settingsService.triggerTestNotifications()
+    // Trigger notifications response
+    alert('Test notifications sent successfully!')
+  } catch (error) {
+    // Error triggering notifications
+    alert('Error sending test notifications. Please try again.')
+  }
+}
+
+// Watch for user profile changes
+watch(() => authStore.user, (newUser) => {
   if (newUser) {
+    // User profile updated from watcher
     userProfile.value = {
       name: newUser.name || '',
       email: newUser.email || ''
     }
-    console.log('User profile updated from watcher:', userProfile.value)
   }
 }, { immediate: true })
 
-// Lifecycle
+// Initialize component
 onMounted(async () => {
   try {
-    // Quick check: if user is admin, load settings immediately
-    if (authStore.isAdmin) {
-      console.log('User is admin, loading settings...')
-      
-      // Set user profile from auth store
-      if (currentUser.value) {
-        userProfile.value = {
-          name: currentUser.value.name || '',
-          email: currentUser.value.email || ''
-        }
-        console.log('User profile loaded:', userProfile.value)
-      }
-      
-      // Load settings from API
+    // Ensure auth store is initialized
+    await authStore.initialize()
+    
+    if (authStore.user && authStore.user.role === 'ADMIN') {
+      // User is admin, loading settings
       await loadSettingsFromAPI()
     } else {
-      console.log('User is not admin, skipping settings load')
+      // User profile loaded
+      if (authStore.user) {
+        userProfile.value = {
+          name: authStore.user.name || '',
+          email: authStore.user.email || ''
+        }
+      }
+      
+      // User is not admin, skipping settings load
+      loadSettingsFromLocalStorage()
     }
-    
   } catch (error) {
-    console.error('Error in onMounted:', error)
+    // Error in onMounted
   }
 })
 </script> 

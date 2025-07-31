@@ -443,7 +443,7 @@ const hasActiveFilters = computed(() => {
 // Handle filter changes
 const handleFilterChange = () => {
   // No API call needed for client-side filtering
-  console.log('Filter changed - Role:', roleFilter.value)
+  // Filter changed
 }
 
 // Methods
@@ -465,7 +465,7 @@ const fetchUsers = async () => {
       limit: itemsPerPage.value
     })
     
-    console.log('Users response:', response)
+    // Users response received
     
     if (response && response.items) {
       users.value = response.items
@@ -473,11 +473,11 @@ const fetchUsers = async () => {
       totalPages.value = response.pagination.totalPages
       currentPage.value = response.pagination.page
     } else {
-      console.error('Unexpected response structure:', response)
+      // Unexpected response structure
       error.value = 'Invalid response format from server'
     }
   } catch (err) {
-    console.error('Error fetching users:', err)
+    // Error fetching users
     error.value = 'Failed to load users. Please try again.'
   } finally {
     loading.value = false
@@ -505,7 +505,7 @@ const closeModal = () => {
 }
 
 const handleUserCreated = (user: User) => {
-  console.log('User created:', user)
+  // User created
   // Add new user to the list
   users.value.unshift(user)
   closeModal()
@@ -514,7 +514,7 @@ const handleUserCreated = (user: User) => {
 }
 
 const handleUserUpdated = (user: User) => {
-  console.log('User updated:', user)
+  // User updated
   // Update existing user in the list
   const index = users.value.findIndex(u => u.id === user.id)
   if (index !== -1) {
@@ -533,11 +533,11 @@ const confirmDeleteUser = (user: User) => {
 
 const deleteUser = async (userId: string) => {
   try {
-    console.log('Deleting user:', userId)
+    // Deleting user
     
     // Call the API to delete user
     const response = await usersService.deleteUser(userId)
-    console.log('Delete response:', response)
+    // Delete response received
     
     // Check if the response indicates success
     if (response && response.status === 'success') {
@@ -550,11 +550,11 @@ const deleteUser = async (userId: string) => {
       // Refresh the user list to ensure data is in sync
       await fetchUsers()
     } else {
-      console.error('Unexpected response format:', response)
+      // Unexpected response format
       throw new Error('Failed to delete user - unexpected response format')
     }
   } catch (err) {
-    console.error('Error deleting user:', err)
+    // Error deleting user
     error.value = 'Failed to delete user. Please try again.'
     alert('Failed to delete user. Please try again.')
   }
