@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { apiService } from '../services/api'
 
 interface User {
   id: string
@@ -45,77 +44,72 @@ export const useAuthStore = defineStore('auth', () => {
     
     console.log('🔍 [AUTH] Starting login process with credentials:', credentials)
     
-    let retries = 3
-    while (retries > 0) {
-      try {
-        console.log('🔍 [AUTH] Attempting login using apiService, retry:', 4 - retries)
+    try {
+      console.log('🔍 [AUTH] Using fetch directly to bypass axios issues')
+      
+      // Use fetch directly to bypass any axios interceptor issues
+      const response = await fetch('http://localhost:3004/api/v1/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials)
+      });
+      
+      console.log('🔍 [AUTH] Fetch response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const responseData = await response.json();
+      
+      console.log('🔍 [AUTH] Response data:', responseData);
+      
+      if (responseData.status === 'success' && responseData.data) {
+        console.log('🔍 [AUTH] Success status and data found')
         
-        // Attempting login using apiService
-        const response = await apiService.login(credentials)
+        const { user: userData, token: userToken } = responseData.data
         
-        console.log('🔍 [AUTH] Login response received:', response)
+        console.log('🔍 [AUTH] Extracted user data:', userData)
+        console.log('🔍 [AUTH] Extracted token:', userToken ? 'Token exists' : 'No token')
         
-        // Handle full response from apiService
-        const responseData = response.data
-        
-        console.log('🔍 [AUTH] Response data:', responseData)
-        
-        if (responseData.status === 'success' && responseData.data) {
-          console.log('🔍 [AUTH] Success status and data found')
+        if (userData && userToken) {
+          console.log('🔍 [AUTH] Both user and token found, setting values')
           
-          const { user: userData, token: userToken } = responseData.data
+          // Login successful, user loaded
+          // Token received
+          user.value = userData
+          token.value = userToken
           
-          console.log('🔍 [AUTH] Extracted user data:', userData)
-          console.log('🔍 [AUTH] Extracted token:', userToken ? 'Token exists' : 'No token')
+          // Save token to localStorage
+          // Token saved to localStorage
+          localStorage.setItem('auth_token', userToken)
           
-          if (userData && userToken) {
-            console.log('🔍 [AUTH] Both user and token found, setting values')
-            
-            // Login successful, user loaded
-            // Token received
-            user.value = userData
-            token.value = userToken
-            
-            // Save token to localStorage
-            // Token saved to localStorage
-            localStorage.setItem('auth_token', userToken)
-            
-            console.log('🔍 [AUTH] Login successful, returning success')
-            return { status: 'success', user: userData }
-          } else {
-            console.log('🔍 [AUTH] Missing user or token in response')
-            // Missing user or token in response
-            error.value = 'Invalid response format from server'
-            return { status: 'error', message: error.value }
-          }
+          console.log('🔍 [AUTH] Login successful, returning success')
+          return { status: 'success', user: userData }
         } else {
-          console.log('🔍 [AUTH] No success status or data, error:', responseData.error)
-          // Login failed: No success status
-          error.value = responseData.error?.message || 'Invalid login response from server'
+          console.log('🔍 [AUTH] Missing user or token in response')
+          // Missing user or token in response
+          error.value = 'Invalid response format from server'
           return { status: 'error', message: error.value }
         }
-      } catch (err: any) {
-        console.log('🔍 [AUTH] Login error caught:', err)
-        console.log('🔍 [AUTH] Error message:', err.message)
-        console.log('🔍 [AUTH] Error response:', err.response)
-        
-        // Login error
-        if (err.message === 'Network Error' && retries > 1) {
-          console.log('🔍 [AUTH] Network error, retrying...')
-          retries--
-          await new Promise(resolve => setTimeout(resolve, 1000))
-          continue
-        }
-        
-        error.value = err.message || 'Login failed'
-        console.log('🔍 [AUTH] Setting error value:', error.value)
-        return { status: 'error', message: error.value, error: err }
+      } else {
+        console.log('🔍 [AUTH] No success status or data, error:', responseData.error)
+        // Login failed: No success status
+        error.value = responseData.error?.message || 'Invalid login response from server'
+        return { status: 'error', message: error.value }
       }
+    } catch (err: any) {
+      console.log('🔍 [AUTH] Login error caught:', err)
+      console.log('🔍 [AUTH] Error message:', err.message)
+      
+      error.value = err.message || 'Login failed'
+      console.log('🔍 [AUTH] Setting error value:', error.value)
+      return { status: 'error', message: error.value, error: err }
+    } finally {
+      loading.value = false
     }
-    
-    console.log('🔍 [AUTH] All retries exhausted')
-    error.value = 'Service temporarily unavailable. Please try again later.'
-    return { status: 'error', message: error.value }
   }
 
   async function logout() {
@@ -140,10 +134,19 @@ export const useAuthStore = defineStore('auth', () => {
     
     try {
       // Fetching user profile with stored token
-      const response = await apiService.getProfile()
+      const response = await fetch('http://localhost:3004/api/v1/auth/me', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${storedToken}`,
+          'Content-Type': 'application/json',
+        }
+      });
       
-      // Handle full response from apiService
-      const responseData = response.data
+      if (!response.ok) {
+        return null
+      }
+      
+      const responseData = await response.json();
       
       if (responseData.status === 'success' && responseData.data) {
         // User profile loaded successfully
