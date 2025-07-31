@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { apiService } from '@/services/api'
 
 interface User {
   id: string
@@ -113,27 +114,13 @@ export const useAuthStore = defineStore('auth', () => {
     }
     
     try {
-      // Fetching user profile with stored token
-      const response = await fetch('http://localhost:3004/api/v1/auth/me', {
-        method: 'GET',
-        mode: 'cors',
-        credentials: 'include',
-        headers: {
-          'Authorization': `Bearer ${storedToken}`,
-          'Content-Type': 'application/json',
-        }
-      });
+      // Use apiService instead of hardcoded URL
+      const response = await apiService.getProfile()
       
-      if (!response.ok) {
-        return null
-      }
-      
-      const responseData = await response.json();
-      
-      if (responseData.status === 'success' && responseData.data) {
+      if (response && response.status === 'success' && response.data) {
         // User profile loaded successfully
-        user.value = responseData.data
-        return responseData.data
+        user.value = response.data
+        return response.data
       } else {
         // Invalid profile response format
         return null
