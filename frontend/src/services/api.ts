@@ -1,4 +1,5 @@
-import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios'
+import axios from 'axios'
+import type { AxiosInstance, AxiosResponse } from 'axios'
 
 // Environment variables
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3004'
@@ -22,7 +23,7 @@ async function retryRequest(fn: () => Promise<any>, retryCount = 0): Promise<any
   try {
     return await fn()
   } catch (error) {
-    if (retryCount < MAX_RETRIES && error instanceof AxiosError && error.response?.status >= 500) {
+    if (retryCount < MAX_RETRIES && axios.isAxiosError(error) && error.response?.status && error.response.status >= 500) {
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (retryCount + 1)))
       return retryRequest(fn, retryCount + 1)
     }
@@ -52,11 +53,11 @@ api.interceptors.response.use(
   (response: AxiosResponse) => {
     return response
   },
-  async (error: AxiosError) => {
+  async (error) => {
     const originalRequest = error.config as any
     
     // Handle 401 Unauthorized - try to refresh token
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (axios.isAxiosError(error) && error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
       
       try {
