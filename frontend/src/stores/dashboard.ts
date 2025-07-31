@@ -99,15 +99,11 @@ export const useDashboardStore = defineStore('dashboard', () => {
   // Fetch expiring domains
   const fetchExpiringDomains = async (days: number = 30) => {
     try {
-      console.log('[DashboardStore] Fetching expiring domains with days:', days)
       const response = await api.getExpiringDomains({ days })
-      console.log('[DashboardStore] Raw expiring domains response:', response)
       
       if (response && response.status === 'success') {
         expiringDomains.value = response.data?.items || []
-        console.log('[DashboardStore] Set expiring domains:', expiringDomains.value)
       } else {
-        console.error('[DashboardStore] Expiring domains response not successful:', response)
         throw new Error(response?.message || 'Failed to fetch expiring domains')
       }
     } catch (err: any) {
@@ -140,15 +136,11 @@ export const useDashboardStore = defineStore('dashboard', () => {
   // Fetch expiring VPS
   const fetchExpiringVPS = async (days: number = 30) => {
     try {
-      console.log('[DashboardStore] Fetching expiring VPS with days:', days)
       const response = await api.getExpiringVPS({ days })
-      console.log('[DashboardStore] Raw VPS response:', response)
       
       if (response && response.status === 'success') {
         expiringVPS.value = response.data?.items || []
-        console.log('[DashboardStore] Set expiring VPS:', expiringVPS.value)
       } else {
-        console.error('[DashboardStore] VPS response not successful:', response)
         throw new Error(response?.message || 'Failed to fetch expiring VPS')
       }
     } catch (err: any) {

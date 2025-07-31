@@ -3,11 +3,10 @@ import type { AxiosInstance, AxiosResponse } from 'axios'
 
 // Environment variables
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3004'
-const API_VERSION = import.meta.env.VITE_API_VERSION || 'v1'
 
 // Create axios instance
 const api: AxiosInstance = axios.create({
-  baseURL: `${API_BASE_URL}/api/${API_VERSION}`,
+  baseURL: `${API_BASE_URL}/api/v1`,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
