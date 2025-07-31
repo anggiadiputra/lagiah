@@ -1,35 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import axios from 'axios'
-
-// Get API base URL from environment or use default
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3004/api/v1'
-
-// Create axios instance for auth
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'X-Requested-With': 'XMLHttpRequest'
-  },
-  timeout: 30000
-})
-
-// Add request interceptor to include token
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('auth_token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => {
-    return Promise.reject(error)
-  }
-)
+import { apiService } from '../services/api'
 
 interface User {
   id: string
@@ -75,20 +46,8 @@ export const useAuthStore = defineStore('auth', () => {
     let retries = 3
     while (retries > 0) {
       try {
-        // Attempting login
-        const response = await api.post('/auth/login', credentials)
-        
-        if (response.status === 503 && retries > 1) {
-          // Connection error, retrying
-          retries--
-          await new Promise(resolve => setTimeout(resolve, 1000))
-          continue
-        }
-        
-        // Login response received
-        
-        // Handle response format from backend
-        const responseData = response.data
+        // Attempting login using apiService
+        const responseData = await apiService.login(credentials)
         
         if (responseData.status === 'success' && responseData.data) {
           const { user: userData, token: userToken } = responseData.data
@@ -116,13 +75,13 @@ export const useAuthStore = defineStore('auth', () => {
         }
       } catch (err: any) {
         // Login error
-        if (err.response?.status === 503 && retries > 1) {
+        if (err.message === 'Network Error' && retries > 1) {
           retries--
           await new Promise(resolve => setTimeout(resolve, 1000))
           continue
         }
         
-        error.value = err.response?.data?.error?.message || err.response?.data?.message || err.message || 'Login failed'
+        error.value = err.message || 'Login failed'
         return { status: 'error', message: error.value, error: err }
       }
     }
@@ -133,7 +92,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function logout() {
     try {
-      await api.post('/auth/logout')
+      // Clear auth state
       clearAuth()
       return { status: 'success' }
     } catch (err: any) {
@@ -153,11 +112,7 @@ export const useAuthStore = defineStore('auth', () => {
     
     try {
       // Fetching user profile with stored token
-      const response = await api.get('/auth/me')
-      // Profile response received
-      
-      // Handle response format from backend
-      const responseData = response.data
+      const responseData = await apiService.getProfile()
       
       if (responseData.status === 'success' && responseData.data) {
         // User profile loaded successfully
