@@ -406,27 +406,10 @@ const clearAlert = () => {
 // Logout function
 const logout = async () => {
   try {
-    console.log('Logging out...')
-    const result = await authStore.logout()
-    
-    if (result.success) {
-      console.log('Logout successful')
-      router.push('/login')
-    } else {
-      console.error('Logout failed:', result.error)
-      showAlert({
-        type: 'error',
-        title: 'Logout failed',
-        message: result.error || 'Please try again',
-      })
-    }
+    await authStore.logout()
+    router.push('/login?redirect=logout')
   } catch (error) {
-    console.error('Logout error:', error)
-    showAlert({
-      type: 'error',
-      title: 'Logout failed',
-      message: 'Please try again',
-    })
+    // Handle logout error
   }
 }
 

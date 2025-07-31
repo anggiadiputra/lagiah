@@ -241,53 +241,31 @@ const domainIds = computed(() => form.value.domainIds || [])
 
 const isEditing = computed(() => !!props.hosting)
 
-// Computed property to get available domains (not assigned to other hosting or VPS)
+// Computed property for available domains (not assigned to other hosting or VPS)
 const availableDomains = computed(() => {
-  console.log('\n=== Computing available domains ===');
-  console.log('Total domains in store:', domainsStore.allDomains.length);
-  
-  if (domainsStore.allDomains.length === 0) {
-    console.log('No domains loaded yet');
-    return [];
+  if (!domainsStore.allDomains || domainsStore.allDomains.length === 0) {
+    return []
   }
-  
-  console.log('All domains:', domainsStore.allDomains.map(d => ({ 
-    name: d.name, 
-    hosting: d.hosting, 
-    vpsId: d.vpsId,
-    hostingId: d.hostingId 
-  })));
-  
-  const available = domainsStore.allDomains.filter(domain => {
-    // If we're editing and this domain is already assigned to current hosting, include it
-    if (isEditing.value && props.hosting?.domains?.some(d => d.id === domain.id)) {
-      console.log(`✅ Domain ${domain.name} is already assigned to current hosting - INCLUDING`);
-      return true;
+
+  return domainsStore.allDomains.filter(domain => {
+    // If editing and this domain is already assigned to current hosting, include it
+    if (isEditing.value && props.hosting && domain.hosting?.id === props.hosting.id) {
+      return true
     }
     
     // If domain is assigned to different hosting, exclude it
-    if (domain.hosting !== null) {
-      console.log(`❌ Domain ${domain.name} is assigned to different hosting - EXCLUDING`);
-      return false;
+    if (domain.hosting && domain.hosting.id !== (props.hosting?.id || null)) {
+      return false
     }
     
-    // If domain is assigned to any VPS, exclude it
-    if (domain.vpsId !== null) {
-      console.log(`❌ Domain ${domain.name} is assigned to VPS - EXCLUDING`);
-      return false;
+    // If domain is assigned to VPS, exclude it
+    if (domain.vpsId) {
+      return false
     }
     
-    // Domain is not assigned to any hosting or VPS - include it
-    console.log(`✅ Domain ${domain.name} is not assigned to any hosting or VPS - INCLUDING`);
-    return true;
-  });
-  
-  console.log('\n=== Available domains summary ===');
-  console.log('Available domains:', available.length, 'out of', domainsStore.allDomains.length);
-  console.log('Available domain names:', available.map(d => d.name));
-  console.log('Unassigned domains found:', domainsStore.allDomains.filter(d => d.hosting === null && d.vpsId === null).map(d => d.name));
-  
-  return available;
+    // Domain is not assigned to any hosting or VPS
+    return true
+  })
 })
 
 // Search and pagination variables
@@ -350,13 +328,6 @@ const isDomainAssignedElsewhere = (domain: any) => {
   }
   // Check if domain is already assigned to any hosting (one-to-many relationship)
   const isAssigned = domain.hosting !== null;
-  console.log(`Domain ${domain.name} assigned status:`, { 
-    domainId: domain.id, 
-    hosting: domain.hosting, 
-    isAssigned,
-    isEditing: isEditing.value,
-    currentHostingId: props.hosting?.id
-  });
   return isAssigned;
 }
 
@@ -418,10 +389,8 @@ watch(() => props.hosting, (newVal) => {
 // Watch for modal open state to ensure domains are loaded
 watch(() => open.value, async (isOpen) => {
   if (isOpen && domainsStore.allDomains.length === 0) {
-    console.log('Modal opened, loading domains...');
     try {
       await domainsStore.fetchDomains({ limit: 500 });
-      console.log('Domains loaded after modal opened');
     } catch (error) {
       console.error('Error loading domains after modal opened:', error);
     }
@@ -436,27 +405,11 @@ watch(() => props.error, (newError) => {
 }, { immediate: true })
 
 onMounted(async () => {
-  console.log('AddEditHostingModal mounted');
-  console.log('Current allDomains length:', domainsStore.allDomains.length);
-  
-  if (domainsStore.allDomains.length === 0) {
-    console.log('Fetching all domains for selector...');
-    try {
-      await domainsStore.fetchDomains({ limit: 500 }) // Fetch all domains for selector
-      console.log('Domains fetched successfully');
-    } catch (error) {
-      console.error('Error fetching domains:', error);
-    }
+  try {
+    await domainsStore.fetchDomains({ limit: 500 })
+  } catch (error) {
+    // Handle error
   }
-  
-  console.log('All domains loaded:', domainsStore.allDomains.length);
-  console.log('Sample domain data:', domainsStore.allDomains[0]);
-  console.log('Domains with hosting:', domainsStore.allDomains.filter(d => d.hosting !== null).length);
-  console.log('Domains without hosting:', domainsStore.allDomains.filter(d => d.hosting === null).length);
-  console.log('Domains with VPS:', domainsStore.allDomains.filter(d => d.vpsId !== null).length);
-  console.log('Unassigned domains:', domainsStore.allDomains.filter(d => d.hosting === null && d.vpsId === null).map(d => d.name));
-  console.log('Available domains count:', availableDomains.value.length);
-  console.log('Available domain names:', availableDomains.value.map(d => d.name));
 })
 
 const closeModal = () => {

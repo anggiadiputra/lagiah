@@ -179,152 +179,72 @@ const resetForm = () => {
   error.value = null
 }
 
-const populateForm = () => {
-  console.log('Populate form called with user:', props.user)
-  if (props.user) {
+// Populate form with user data
+const populateForm = (user: any) => {
+  if (user) {
     form.value = {
-      name: props.user.name || '',
-      email: props.user.email || '',
-      role: props.user.role || '',
-      password: '',
-      confirmPassword: ''
+      name: user.name || '',
+      email: user.email || '',
+      role: user.role || 'VIEWER',
+      isActive: user.isActive !== undefined ? user.isActive : true
     }
-    console.log('Form populated:', form.value)
   } else {
-    console.log('No user data to populate')
+    form.value = {
+      name: '',
+      email: '',
+      role: 'VIEWER',
+      isActive: true
+    }
   }
 }
 
-const closeModal = () => {
-  if (!loading.value) {
-    resetForm()
-    emit('close')
-  }
-}
-
-const validateForm = (): boolean => {
-  error.value = null
-
-  if (!form.value.name.trim()) {
-    error.value = 'Name is required'
-    return false
-  }
-
-  if (!form.value.email.trim()) {
-    error.value = 'Email is required'
-    return false
-  }
-
-  if (!form.value.role) {
-    error.value = 'Role is required'
-    return false
-  }
-
-  if (!isEditing.value) {
-    if (!form.value.password) {
-      error.value = 'Password is required'
-      return false
-    }
-
-    if (form.value.password.length < 6) {
-      error.value = 'Password must be at least 6 characters'
-      return false
-    }
-
-    if (form.value.password !== form.value.confirmPassword) {
-      error.value = 'Passwords do not match'
-      return false
-    }
-  }
-
-  return true
-}
-
+// Handle form submission
 const handleSubmit = async () => {
-  if (!validateForm()) {
-    return
-  }
-
+  if (!form.value) return
+  
   loading.value = true
   error.value = null
-
+  
   try {
-    if (isEditing.value && props.user) {
-      // Update existing user
-      const userData = {
-        name: form.value.name.trim(),
-        email: form.value.email.trim(),
-        role: form.value.role as 'ADMIN' | 'STAFF' | 'FINANCE' | 'VIEWER',
-        ...(form.value.password ? { password: form.value.password } : {})
-      }
-
-      console.log('Updating user with data:', userData)
-      const response = await usersService.updateUser(props.user.id, userData)
-      console.log('Update response:', response)
-      
-      // The response from usersService.updateUser() is response.data from API
-      // So the structure is: { message: "...", user: {...} }
-      if (response && response.user) {
-        emit('userUpdated', response.user)
-      } else {
-        console.error('Invalid response structure:', response)
-        error.value = 'Invalid response from server'
-        return
-      }
-    } else {
-      // Create new user
-      const userData = {
-        name: form.value.name.trim(),
-        email: form.value.email.trim(),
-        password: form.value.password,
-        role: form.value.role as 'ADMIN' | 'STAFF' | 'FINANCE' | 'VIEWER'
-      }
-
-      console.log('Creating user with data:', userData)
-      const response = await usersService.createUser(userData)
-      console.log('Create response:', response)
-      
-      // The response from usersService.createUser() is response.data from API
-      // So the structure is: { message: "...", user: {...} }
-      console.log('Create user response in modal:', response)
-      if (response && response.user) {
-        emit('userCreated', response.user)
-      } else {
-        console.error('Invalid response structure:', response)
-        error.value = 'Invalid response from server'
-        return
-      }
+    const userData = {
+      name: form.value.name,
+      email: form.value.email,
+      role: form.value.role,
+      isActive: form.value.isActive
     }
-
-    closeModal()
+    
+    let response
+    
+    if (isEditing.value) {
+      response = await usersService.updateUser(props.user!.id, userData)
+    } else {
+      response = await usersService.createUser(userData)
+    }
+    
+    if (response.status === 'success') {
+      emit('userUpdated', response.data)
+      closeModal()
+    } else {
+      error.value = response.message || 'Failed to save user'
+    }
   } catch (err: any) {
-    console.error('Error saving user:', err)
-    if (err.response?.data?.error?.message) {
-      error.value = err.response.data.error.message
-    } else {
-      error.value = 'Failed to save user. Please try again.'
-    }
+    error.value = err.message || 'An error occurred while saving the user'
   } finally {
     loading.value = false
   }
 }
 
 // Watchers
-watch(() => props.isOpen, (newValue) => {
-  console.log('Modal isOpen changed:', newValue)
+watch(isOpen, (newValue) => {
   if (newValue) {
-    nextTick(() => {
-      populateForm()
-    })
+    populateForm(props.user)
   }
 })
 
+// Watch for user prop changes
 watch(() => props.user, (newUser) => {
-  console.log('User prop changed:', newUser)
-  if (props.isOpen && newUser) {
-    nextTick(() => {
-      populateForm()
-    })
+  if (isOpen.value) {
+    populateForm(newUser)
   }
-}, { immediate: true })
+})
 </script> 

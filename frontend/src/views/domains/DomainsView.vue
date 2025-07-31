@@ -914,30 +914,31 @@ const hasActiveFilters = computed(() => {
 })
 
 // Handle search with debouncing - client-side only
-const handleSearch = async () => {
-  console.log('Handling search with:', search.value)
-  
-  // Clear previous timer
-  if (debounceTimer.value) {
-    clearTimeout(debounceTimer.value)
+const handleSearch = () => {
+  if (search.value.trim()) {
+    // Perform client-side search
+    const searchTerm = search.value.toLowerCase()
+    const filtered = domainsStore.domains.filter(domain => 
+      domain.name.toLowerCase().includes(searchTerm) ||
+      domain.registrar?.toLowerCase().includes(searchTerm)
+    )
+    // Update the store with filtered results
+    domainsStore.domains = filtered
+  } else {
+    // Reset to original data
+    fetchDomains()
   }
-  
-  // Set new timer for debouncing
-  debounceTimer.value = setTimeout(async () => {
-    try {
-      console.log('Executing client-side search with:', search.value)
-      // No API call needed for client-side filtering
-      console.log('Client-side search completed successfully')
-    } catch (error) {
-      console.error('Search error:', error)
-    }
-  }, 300) // 300ms delay for client-side search
 }
 
 // Handle filter changes - client-side only
-const handleFilterChange = async () => {
-  console.log('Filter changed - Status:', statusFilter.value, 'Registrar:', registrarFilter.value)
-  // No API call needed for client-side filtering
+const handleFilterChange = () => {
+  const filtered = domainsStore.domains.filter(domain => {
+    const statusMatch = !statusFilter.value || domain.status === statusFilter.value
+    const registrarMatch = !registrarFilter.value || domain.registrar === registrarFilter.value
+    return statusMatch && registrarMatch
+  })
+  // Update the store with filtered results
+  domainsStore.domains = filtered
 }
 
 // Computed properties for pagination
@@ -980,41 +981,52 @@ const displayedPages = computed(() => {
 
 // Fetch domains
 const fetchDomains = async () => {
-  console.log('Fetching domains')
-  await domainsStore.fetchDomains()
+  try {
+    await domainsStore.fetchDomains({
+      page: domainsStore.pagination.page,
+      limit: domainsStore.pagination.limit,
+      search: search.value,
+      status: statusFilter.value,
+      registrar: registrarFilter.value
+    })
+  } catch (error) {
+    // Handle error
+  }
 }
 
 // Watch for search changes
 watch(search, (newValue) => {
-  console.log('Search value changed to:', newValue)
-  handleSearch()
+  if (newValue.trim()) {
+    handleSearch()
+  } else {
+    fetchDomains()
+  }
+})
+
+// Watch for filter changes
+watch([statusFilter, registrarFilter], () => {
+  handleFilterChange()
 })
 
 // Initialize search on mount
 onMounted(() => {
-  console.log('Component mounted, initializing search')
-  if (search.value) {
-    handleSearch()
-  }
+  fetchDomains()
 })
 
 // Pagination methods
 const goToPage = async (page: number) => {
-  console.log('Going to page:', page)
   domainsStore.setFilters({ page })
-  await domainsStore.fetchDomains()
+  await fetchDomains()
 }
 
 const prevPage = async () => {
   if (domainsStore.pagination.page > 1) {
-    console.log('Going to previous page:', domainsStore.pagination.page - 1)
     await goToPage(domainsStore.pagination.page - 1)
   }
 }
 
 const nextPage = async () => {
   if (domainsStore.pagination.page < domainsStore.pagination.pages) {
-    console.log('Going to next page:', domainsStore.pagination.page + 1)
     await goToPage(domainsStore.pagination.page + 1)
   }
 }

@@ -248,23 +248,18 @@ const handleSubmit = async () => {
 
       notes: form.value.notes || undefined,
     }
-
-    console.log('[EditDomainModal] Submitting with data:', domainData)
     
     const response = await domainStore.updateDomain(props.domain.id, domainData)
-
+    
     if (response && typeof response === 'object' && 'status' in response && response.status === 'success') {
-      console.log('[EditDomainModal] Domain updated successfully:', response)
       const updatedDomain = (response as any).data || props.domain
       emit('success', updatedDomain)
       closeModal()
     } else {
-      console.error('[EditDomainModal] Failed to update domain:', response)
       error.value = (response as any)?.message || (response as any)?.error?.message || 'An unknown error occurred.'
     }
 
   } catch (err: any) {
-    console.error('[EditDomainModal] Exception during submission:', err)
     error.value = err.message || 'An unexpected client-side error occurred.'
   } finally {
     isLoading.value = false

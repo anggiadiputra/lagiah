@@ -367,20 +367,21 @@ watch(() => props.error, (newError) => {
 }, { immediate: true })
 
 onMounted(async () => {
-  console.log('AddEditVPSModal mounted')
-  
-  if (domainsStore.allDomains.length === 0) {
-    console.log('Fetching all domains for VPS selector...')
+  try {
+    await domainsStore.fetchDomains({ limit: 500 })
+  } catch (error) {
+    // Handle error
+  }
+})
+
+watch(open, async (newValue) => {
+  if (newValue) {
     try {
       await domainsStore.fetchDomains({ limit: 500 })
-      console.log('Domains fetched successfully for VPS')
     } catch (error) {
-      console.error('Error fetching domains for VPS:', error)
+      // Handle error
     }
   }
-  
-  console.log('All domains loaded for VPS:', domainsStore.allDomains.length)
-  console.log('Available domains for VPS:', availableDomains.value.length)
 })
 
 const isMainDomain = (domainId: string) => {

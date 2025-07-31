@@ -351,64 +351,49 @@ const form = ref({
 
 // Computed properties
 const isEditing = computed(() => !!props.website)
-const availableDomains = computed(() => {
-  console.log('Modal received domains:', props.domains)
-  console.log('Available domains count:', props.domains.length)
-  console.log('Current form domainId:', form.value.domainId)
-  
-  // Filter out domains that are already assigned to other websites
-  const availableDomains = props.domains.filter(domain => {
-    // If we're editing, allow the current website's domain
-    if (isEditing.value && props.website?.domainId === domain.id) {
-      console.log(`Domain ${domain.name} (${domain.id}): Allowed for current website`)
-      return true
+  // Computed property for available domains
+  const availableDomains = computed(() => {
+    if (!props.domains || props.domains.length === 0) {
+      return []
     }
-    
-    // Check if domain is already assigned to any website
-    // Only filter out if domain has websites AND we're not editing
-    const hasWebsites = domain.websites && domain.websites.length > 0
-    
-    console.log(`Domain ${domain.name} (${domain.id}):`, {
-      hasWebsites,
-      websites: domain.websites?.length || 0,
-      isCurrentWebsite: isEditing.value && props.website?.domainId === domain.id,
-      willShow: !hasWebsites || (isEditing.value && props.website?.domainId === domain.id)
+
+    return props.domains.filter(domain => {
+      // If domain is not assigned to any website, it's available
+      if (!domain.websites || domain.websites.length === 0) {
+        return true
+      }
+      
+      // If domain is assigned to current website (when editing), it's available
+      if (isEditing.value && props.website && domain.websites.some(w => w.id === props.website!.id)) {
+        return true
+      }
+      
+      // Domain is assigned to other website, not available
+      return false
     })
-    
-    // Show domain if it has no websites OR if we're editing and it's the current website's domain
-    return !hasWebsites || (isEditing.value && props.website?.domainId === domain.id)
   })
-  
-  console.log('Available domains after filtering:', availableDomains.length)
-  return availableDomains
-})
 
-// Auto-assigned hosting/VPS based on domain selection
-const assignedHosting = computed(() => {
-  if (!form.value.domainId) return null
-  const selectedDomain = props.domains.find(d => d.id === form.value.domainId)
-  console.log('Selected domain for hosting:', selectedDomain)
-  if (selectedDomain?.hosting) {
-    const hosting = props.hostingAccounts.find(h => h.id === selectedDomain.hosting?.id)
-    console.log('Found hosting:', hosting)
-    return hosting
-  }
-  return null
-})
+  // Computed property for assigned hosting
+  const assignedHosting = computed(() => {
+    if (!form.value.domainId) return null
+    
+    const selectedDomain = props.domains?.find(d => d.id === form.value.domainId)
+    if (!selectedDomain) return null
+    
+    return selectedDomain.hosting
+  })
 
-const assignedVps = computed(() => {
-  if (!form.value.domainId) return null
-  const selectedDomain = props.domains.find(d => d.id === form.value.domainId)
-  console.log('Selected domain for VPS:', selectedDomain)
-  if (selectedDomain?.vps) {
-    const vps = props.vpsAccounts.find(v => v.id === selectedDomain.vps?.id)
-    console.log('Found VPS:', vps)
-    return vps
-  }
-  return null
-})
+  // Computed property for assigned VPS
+  const assignedVps = computed(() => {
+    if (!form.value.domainId) return null
+    
+    const selectedDomain = props.domains?.find(d => d.id === form.value.domainId)
+    if (!selectedDomain) return null
+    
+    return selectedDomain.vps
+  })
 
-// Display current hosting/VPS assignment
+  // Display current hosting/VPS assignment
 const currentHosting = computed(() => {
   // If no domain is selected, don't show any hosting
   if (!form.value.domainId) {

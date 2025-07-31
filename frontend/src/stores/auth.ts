@@ -42,11 +42,7 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     error.value = null
     
-    console.log('🔍 [AUTH] Starting login process with credentials:', credentials)
-    
     try {
-      console.log('🔍 [AUTH] Using fetch directly to bypass axios issues')
-      
       // Use fetch directly to bypass any axios interceptor issues
       const response = await fetch('http://localhost:3004/api/v1/auth/login', {
         method: 'POST',
@@ -58,28 +54,16 @@ export const useAuthStore = defineStore('auth', () => {
         body: JSON.stringify(credentials)
       });
       
-      console.log('🔍 [AUTH] Fetch response status:', response.status);
-      console.log('🔍 [AUTH] Fetch response headers:', response.headers);
-      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const responseData = await response.json();
       
-      console.log('🔍 [AUTH] Response data:', responseData);
-      
       if (responseData.status === 'success' && responseData.data) {
-        console.log('🔍 [AUTH] Success status and data found')
-        
         const { user: userData, token: userToken } = responseData.data
         
-        console.log('🔍 [AUTH] Extracted user data:', userData)
-        console.log('🔍 [AUTH] Extracted token:', userToken ? 'Token exists' : 'No token')
-        
         if (userData && userToken) {
-          console.log('🔍 [AUTH] Both user and token found, setting values')
-          
           // Login successful, user loaded
           // Token received
           user.value = userData
@@ -89,26 +73,19 @@ export const useAuthStore = defineStore('auth', () => {
           // Token saved to localStorage
           localStorage.setItem('auth_token', userToken)
           
-          console.log('🔍 [AUTH] Login successful, returning success')
           return { status: 'success', user: userData }
         } else {
-          console.log('🔍 [AUTH] Missing user or token in response')
           // Missing user or token in response
           error.value = 'Invalid response format from server'
           return { status: 'error', message: error.value }
         }
       } else {
-        console.log('🔍 [AUTH] No success status or data, error:', responseData.error)
         // Login failed: No success status
         error.value = responseData.error?.message || 'Invalid login response from server'
         return { status: 'error', message: error.value }
       }
     } catch (err: any) {
-      console.log('🔍 [AUTH] Login error caught:', err)
-      console.log('🔍 [AUTH] Error message:', err.message)
-      
       error.value = err.message || 'Login failed'
-      console.log('🔍 [AUTH] Setting error value:', error.value)
       return { status: 'error', message: error.value, error: err }
     } finally {
       loading.value = false

@@ -85,7 +85,7 @@ const USE_MOCK_API = false // Use real backend API
 const api = USE_MOCK_API ? mockApiService : apiService
 
 // Log which API is being used
-console.log(`Using ${USE_MOCK_API ? 'MOCK' : 'REAL'} API`)
+// console.log(`Using ${USE_MOCK_API ? 'MOCK' : 'REAL'} API`)
 
 // Define API functions
 const getDomains = (params?: any) => api.getDomains(params)

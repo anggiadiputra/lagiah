@@ -72,7 +72,6 @@ class UsersService {
       if (params?.role) queryParams.append('role', params.role)
       
       const response = await apiService.get(`/users?${queryParams.toString()}`)
-      console.log('Raw API response:', response)
       
       // Handle both response formats (direct data or nested in response.data)
       const responseData = response.data ? response.data : response
@@ -90,13 +89,9 @@ class UsersService {
       
       // Handle both response formats (direct data or nested in response.data)
       const responseData = response.data ? response.data : response
-      console.log('Create user response:', responseData)
-      
-      // Return the data object directly since that's what the modal expects
       return responseData.data
-    } catch (error) {
-      console.error('Error creating user:', error)
-      throw error
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to create user')
     }
   }
 
@@ -108,9 +103,8 @@ class UsersService {
       // Handle both response formats (direct data or nested in response.data)
       const responseData = response.data ? response.data : response
       return responseData.data
-    } catch (error) {
-      console.error('Error updating user:', error)
-      throw error
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to update user')
     }
   }
 
@@ -121,11 +115,9 @@ class UsersService {
       
       // Handle both response formats (direct data or nested in response.data)
       const responseData = response.data ? response.data : response
-      console.log('Delete user response:', responseData)
       return responseData
-    } catch (error) {
-      console.error('Error deleting user:', error)
-      throw error
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to delete user')
     }
   }
 
