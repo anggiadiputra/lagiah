@@ -71,11 +71,9 @@ class SettingsService {
       if (responseData.status === 'success' && responseData.data) {
         return responseData.data
       } else {
-        console.error('Invalid response structure:', responseData)
         throw new Error('Invalid response structure from settings API')
       }
     } catch (error) {
-      console.error('Error fetching settings:', error)
       throw error
     }
   }
@@ -89,11 +87,9 @@ class SettingsService {
       if (response && response.settings) {
         return response.settings as AppSettings
       } else {
-        console.error('Invalid response structure:', response)
         throw new Error('Invalid response structure from settings API')
       }
     } catch (error) {
-      console.error('Error fetching app settings:', error)
       throw error
     }
   }
@@ -108,11 +104,9 @@ class SettingsService {
       if (response && response.settings) {
         return response.settings as SecuritySettings
       } else {
-        console.error('Invalid response structure:', response)
         throw new Error('Invalid response structure from settings API')
       }
     } catch (error) {
-      console.error('Error fetching security settings:', error)
       throw error
     }
   }
@@ -123,7 +117,6 @@ class SettingsService {
       const response = await apiService.put('/settings', { settings })
       return response.data
     } catch (error) {
-      console.error('Error updating settings:', error)
       throw error
     }
   }
@@ -140,7 +133,6 @@ class SettingsService {
 
       return await this.updateSettings(settings)
     } catch (error) {
-      console.error('Error updating app settings:', error)
       throw error
     }
   }
@@ -157,7 +149,6 @@ class SettingsService {
 
       return await this.updateSettings(settings)
     } catch (error) {
-      console.error('Error updating security settings:', error)
       throw error
     }
   }

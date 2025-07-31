@@ -14,7 +14,6 @@ export function useTitle() {
     try {
       // Only fetch settings if user is authenticated
       if (!authStore.isAuthenticated) {
-        console.log('User not authenticated, skipping app name fetch')
         return
       }
       
@@ -25,7 +24,6 @@ export function useTitle() {
         appName.value = appNameSetting
       }
     } catch (error) {
-      console.error('Error fetching app name:', error)
       // Keep default app name if fetch fails
     } finally {
       isLoading.value = false
