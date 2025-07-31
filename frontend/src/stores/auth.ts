@@ -87,28 +87,31 @@ export const useAuthStore = defineStore('auth', () => {
         
         // Login response received
         
-        // Handle both response formats
-        const responseData = response.data ? response.data : response
-        // Response data structure
-        // ResponseData.data
-        // ResponseData.data.token
-        // ResponseData.token
+        // Handle response format from backend
+        const responseData = response.data
         
-        if (responseData.status === 'success' && responseData.user && responseData.token) {
-          // Login successful, user loaded
-          // Token received
-          user.value = responseData.user
-          token.value = responseData.token
+        if (responseData.status === 'success' && responseData.data) {
+          const { user: userData, token: userToken } = responseData.data
           
-          // Save token to localStorage
-          // Token saved to localStorage
-          localStorage.setItem('auth_token', responseData.token)
-          
-          return { status: 'success', user: responseData.user }
+          if (userData && userToken) {
+            // Login successful, user loaded
+            // Token received
+            user.value = userData
+            token.value = userToken
+            
+            // Save token to localStorage
+            // Token saved to localStorage
+            localStorage.setItem('auth_token', userToken)
+            
+            return { status: 'success', user: userData }
+          } else {
+            // Missing user or token in response
+            error.value = 'Invalid response format from server'
+            return { status: 'error', message: error.value }
+          }
         } else {
-          // Token is null, cannot save to localStorage
-          // Login failed: No token received
-          error.value = 'Invalid login response from server'
+          // Login failed: No success status
+          error.value = responseData.error?.message || 'Invalid login response from server'
           return { status: 'error', message: error.value }
         }
       } catch (err: any) {
@@ -119,7 +122,7 @@ export const useAuthStore = defineStore('auth', () => {
           continue
         }
         
-        error.value = err.response?.data?.message || err.message || 'Login failed'
+        error.value = err.response?.data?.error?.message || err.response?.data?.message || err.message || 'Login failed'
         return { status: 'error', message: error.value, error: err }
       }
     }
@@ -153,9 +156,8 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await api.get('/auth/me')
       // Profile response received
       
-      // Handle both response formats
-      const responseData = response.data ? response.data : response
-      // Profile response data structure
+      // Handle response format from backend
+      const responseData = response.data
       
       if (responseData.status === 'success' && responseData.data) {
         // User profile loaded successfully
