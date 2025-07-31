@@ -43,16 +43,34 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     error.value = null
     
+    console.log('🔍 [AUTH] Starting login process with credentials:', credentials)
+    
     let retries = 3
     while (retries > 0) {
       try {
+        console.log('🔍 [AUTH] Attempting login using apiService, retry:', 4 - retries)
+        
         // Attempting login using apiService
-        const responseData = await apiService.login(credentials)
+        const response = await apiService.login(credentials)
+        
+        console.log('🔍 [AUTH] Login response received:', response)
+        
+        // Handle full response from apiService
+        const responseData = response.data
+        
+        console.log('🔍 [AUTH] Response data:', responseData)
         
         if (responseData.status === 'success' && responseData.data) {
+          console.log('🔍 [AUTH] Success status and data found')
+          
           const { user: userData, token: userToken } = responseData.data
           
+          console.log('🔍 [AUTH] Extracted user data:', userData)
+          console.log('🔍 [AUTH] Extracted token:', userToken ? 'Token exists' : 'No token')
+          
           if (userData && userToken) {
+            console.log('🔍 [AUTH] Both user and token found, setting values')
+            
             // Login successful, user loaded
             // Token received
             user.value = userData
@@ -62,30 +80,40 @@ export const useAuthStore = defineStore('auth', () => {
             // Token saved to localStorage
             localStorage.setItem('auth_token', userToken)
             
+            console.log('🔍 [AUTH] Login successful, returning success')
             return { status: 'success', user: userData }
           } else {
+            console.log('🔍 [AUTH] Missing user or token in response')
             // Missing user or token in response
             error.value = 'Invalid response format from server'
             return { status: 'error', message: error.value }
           }
         } else {
+          console.log('🔍 [AUTH] No success status or data, error:', responseData.error)
           // Login failed: No success status
           error.value = responseData.error?.message || 'Invalid login response from server'
           return { status: 'error', message: error.value }
         }
       } catch (err: any) {
+        console.log('🔍 [AUTH] Login error caught:', err)
+        console.log('🔍 [AUTH] Error message:', err.message)
+        console.log('🔍 [AUTH] Error response:', err.response)
+        
         // Login error
         if (err.message === 'Network Error' && retries > 1) {
+          console.log('🔍 [AUTH] Network error, retrying...')
           retries--
           await new Promise(resolve => setTimeout(resolve, 1000))
           continue
         }
         
         error.value = err.message || 'Login failed'
+        console.log('🔍 [AUTH] Setting error value:', error.value)
         return { status: 'error', message: error.value, error: err }
       }
     }
     
+    console.log('🔍 [AUTH] All retries exhausted')
     error.value = 'Service temporarily unavailable. Please try again later.'
     return { status: 'error', message: error.value }
   }
@@ -112,7 +140,10 @@ export const useAuthStore = defineStore('auth', () => {
     
     try {
       // Fetching user profile with stored token
-      const responseData = await apiService.getProfile()
+      const response = await apiService.getProfile()
+      
+      // Handle full response from apiService
+      const responseData = response.data
       
       if (responseData.status === 'success' && responseData.data) {
         // User profile loaded successfully

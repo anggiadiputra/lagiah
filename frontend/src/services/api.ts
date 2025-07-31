@@ -572,14 +572,14 @@ export const apiService = {
   // Auth methods
   async login(credentials: { email: string, password: string }) {
     const response = await api.post('/auth/login', credentials)
-    // Return the actual data from the response
-    return response.data
+    // Return the full response since interceptor returns full response
+    return response
   },
   
   async getProfile() {
     const response = await api.get('/auth/me')
-    // Return the actual data from the response
-    return response.data
+    // Return the full response since interceptor returns full response
+    return response
   },
 
   // HOSTING
