@@ -45,7 +45,7 @@ export const useVPSStore = defineStore('vps', () => {
       }
     } catch (err: any) {
       error.value = err.message || 'An error occurred while fetching VPS accounts.'
-      console.error('[VPSStore] Error fetching VPS accounts:', err)
+      // Error fetching VPS accounts
       return { status: 'error', message: error.value, error: err }
     } finally {
       loading.value = false
@@ -70,7 +70,7 @@ export const useVPSStore = defineStore('vps', () => {
       }
     } catch (err: any) {
       error.value = err.message || 'An error occurred while fetching VPS details.'
-      console.error('[VPSStore] Error fetching VPS details:', err)
+      // Error fetching VPS details
       return { status: 'error', message: error.value, error: err }
     } finally {
       loading.value = false
@@ -100,7 +100,7 @@ export const useVPSStore = defineStore('vps', () => {
         Object.entries(vpsData).map(([key, value]) => [key, value === undefined ? null : value])
       );
       
-      console.log('[VPSStore] Creating VPS with data:', cleanData);
+      // Creating VPS with data
       
       const response = await api.createVPS(cleanData)
       
@@ -118,7 +118,7 @@ export const useVPSStore = defineStore('vps', () => {
                               : 'Failed to create VPS.');
         
         error.value = errorMessage;
-        console.error('[VPSStore] Error from API:', responseData);
+        // Error from API
         throw new Error(errorMessage);
       }
     } catch (err: any) {
@@ -131,7 +131,7 @@ export const useVPSStore = defineStore('vps', () => {
       }
       
       error.value = errorMessage;
-      console.error('[VPSStore] Error creating VPS:', err);
+      // Error creating VPS
       return { status: 'error', message: errorMessage, error: err }
     } finally {
       loading.value = false
@@ -148,7 +148,7 @@ export const useVPSStore = defineStore('vps', () => {
         Object.entries(vpsData).map(([key, value]) => [key, value === undefined ? null : value])
       );
       
-      console.log(`[VPSStore] Updating VPS ${id} with data:`, cleanData);
+      // Updating VPS with data
       
       const response = await api.updateVPS(id, cleanData)
       
@@ -163,7 +163,7 @@ export const useVPSStore = defineStore('vps', () => {
       }
     } catch (err: any) {
       error.value = err.message || 'An error occurred during update.'
-      console.error('[VPSStore] Error updating VPS:', err)
+      // Error updating VPS
       return { status: 'error', message: error.value, error: err }
     } finally {
       loading.value = false
@@ -188,7 +188,7 @@ export const useVPSStore = defineStore('vps', () => {
       }
     } catch (err: any) {
       error.value = err.message || 'An error occurred during deletion.'
-      console.error('[VPSStore] Error deleting VPS:', err)
+      // Error deleting VPS
       return { status: 'error', message: error.value, error: err }
     } finally {
       loading.value = false

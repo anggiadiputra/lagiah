@@ -672,7 +672,7 @@ const getMainDomain = (domains: any[]) => {
 // Handle filter changes
 const handleFilterChange = () => {
   // No API call needed for client-side filtering
-  console.log('Filter changed - Status:', statusFilter.value, 'Provider:', providerFilter.value)
+      // Filter changed
 }
 
 onMounted(() => {
@@ -696,21 +696,21 @@ const handleSave = async (vpsData: Partial<VPS>) => {
     if (selectedVPS.value) {
       const result = await vpsStore.updateVPS(selectedVPS.value.id, vpsData)
       if (result && result.status === 'error') {
-        console.error('Error updating VPS:', result.message);
+        // Error updating VPS
         modalError.value = result.message;
         return;
       }
     } else {
       const response = await vpsStore.createVPS(vpsData)
       if (response && response.status === 'error') {
-        console.error('Error creating VPS:', response.message);
+        // Error creating VPS
         modalError.value = response.message;
         return;
       }
     }
     closeModal()
   } catch (error: any) {
-    console.error('Error in handleSave:', error);
+    // Error in handleSave
     modalError.value = error.message || 'An unexpected error occurred';
   }
 }
@@ -744,12 +744,12 @@ const confirmDelete = async (id: string) => {
       }
       
       // Success - VPS was deleted
-      console.log('VPS deleted successfully')
+      // VPS deleted successfully
       // Show success message
       alert(`VPS server "${vps.name}" has been deleted successfully.`)
     } catch (error: any) {
       // Handle any unexpected errors
-      console.error('Error deleting VPS:', error)
+      // Error deleting VPS
       alert(`Error deleting VPS: ${error.message || 'An unexpected error occurred'}`)
     }
   }
@@ -779,12 +779,12 @@ const copyToClipboard = async (vpsId: string) => {
     if (password) {
       await navigator.clipboard.writeText(password)
       alert('Password copied to clipboard!')
-      console.log('Copied to clipboard:', password)
+      // Copied to clipboard
     } else {
       alert('No password available for this VPS')
     }
   } catch (err) {
-    console.error('Failed to copy to clipboard:', err)
+    // Failed to copy to clipboard
     alert('Failed to copy password to clipboard')
   }
 }

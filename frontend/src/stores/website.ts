@@ -15,22 +15,22 @@ export const useWebsiteStore = defineStore('website', () => {
     error.value = null
     try {
       const response = await api.getWebsites(params)
-      console.log('[WebsiteStore] Raw API response:', response)
+              // Raw API response received
       
       // Handle both response formats (direct data or nested in response.data)
       const responseData = response.data ? response.data : response
       
       if (responseData && responseData.status === 'success') {
-        console.log('[WebsiteStore] Setting websites to:', responseData.data?.items)
+        // Setting websites data
         websites.value = responseData.data?.items || []
-        console.log('[WebsiteStore] Websites after setting:', websites.value)
+        // Websites loaded successfully
         return responseData
       } else {
         throw new Error(responseData?.message || 'Failed to fetch websites.')
       }
     } catch (err: any) {
       error.value = err.message || 'An error occurred while fetching websites.'
-      console.error('[WebsiteStore] Error fetching websites:', err)
+      // Error fetching websites
       return { status: 'error', message: error.value, error: err }
     } finally {
       loading.value = false
@@ -55,7 +55,7 @@ export const useWebsiteStore = defineStore('website', () => {
       }
     } catch (err: any) {
       error.value = err.message || 'An error occurred while fetching website details.'
-      console.error('[WebsiteStore] Error fetching website details:', err)
+      // Error fetching website details
       return { status: 'error', message: error.value, error: err }
     } finally {
       loading.value = false
@@ -86,7 +86,7 @@ export const useWebsiteStore = defineStore('website', () => {
         Object.entries(websiteData).map(([key, value]) => [key, value === undefined ? null : value])
       );
       
-      console.log('[WebsiteStore] Creating website with data:', cleanData);
+      // Creating website with data
       
       const response = await api.createWebsite(cleanData)
       
@@ -104,7 +104,7 @@ export const useWebsiteStore = defineStore('website', () => {
                               : 'Failed to create website.');
         
         error.value = errorMessage;
-        console.error('[WebsiteStore] Error from API:', responseData);
+        // Error from API
         throw new Error(errorMessage);
       }
     } catch (err: any) {
@@ -117,7 +117,7 @@ export const useWebsiteStore = defineStore('website', () => {
       }
       
       error.value = errorMessage;
-      console.error('[WebsiteStore] Error creating website:', err);
+      // Error creating website
       return { status: 'error', message: errorMessage, error: err }
     } finally {
       loading.value = false
@@ -134,7 +134,7 @@ export const useWebsiteStore = defineStore('website', () => {
         Object.entries(websiteData).map(([key, value]) => [key, value === undefined ? null : value])
       );
       
-      console.log(`[WebsiteStore] Updating website ${id} with data:`, cleanData);
+      // Updating website with data
       
       const response = await api.updateWebsite(id, cleanData)
       
@@ -149,7 +149,7 @@ export const useWebsiteStore = defineStore('website', () => {
       }
     } catch (err: any) {
       error.value = err.message || 'An error occurred during update.'
-      console.error('[WebsiteStore] Error updating website:', err)
+      // Error updating website
       return { status: 'error', message: error.value, error: err }
     } finally {
       loading.value = false
@@ -174,7 +174,7 @@ export const useWebsiteStore = defineStore('website', () => {
       }
     } catch (err: any) {
       error.value = err.message || 'An error occurred during deletion.'
-      console.error('[WebsiteStore] Error deleting website:', err)
+      // Error deleting website
       return { status: 'error', message: error.value, error: err }
     } finally {
       loading.value = false

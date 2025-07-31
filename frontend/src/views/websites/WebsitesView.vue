@@ -579,7 +579,7 @@ const hasActiveFilters = computed(() => {
 // Handle filter changes
 const handleFilterChange = () => {
   // No API call needed for client-side filtering
-  console.log('Filter changed - Status:', statusFilter.value, 'Type:', typeFilter.value)
+      // Filter changed
 }
 
 onMounted(async () => {
@@ -594,7 +594,7 @@ onMounted(async () => {
 const openAddWebsiteModal = async (website: Website | null = null) => {
   // Ensure domains are loaded for the modal
   if (domainStore.allDomains.length === 0) {
-    console.log('Fetching domains for website modal...')
+    // Fetching domains for website modal
     await domainStore.fetchDomains({ limit: 500 })
   }
   
@@ -612,12 +612,12 @@ const closeModal = () => {
 }
 
 const handleWebsiteCreated = (website: Website) => {
-  console.log('Website created:', website)
+  // Website created
   closeModal()
 }
 
 const handleWebsiteUpdated = (website: Website) => {
-  console.log('Website updated:', website)
+  // Website updated
   closeModal()
 }
 
@@ -629,12 +629,12 @@ const copyToClipboard = async (websiteId: string) => {
     if (password) {
       await navigator.clipboard.writeText(password)
       alert('Password copied to clipboard!')
-      console.log('Copied to clipboard:', password)
+      // Copied to clipboard
     } else {
       alert('No password available for this website')
     }
   } catch (err) {
-    console.error('Failed to copy to clipboard:', err)
+    // Failed to copy to clipboard
     alert('Failed to copy password to clipboard')
   }
 }
@@ -656,10 +656,10 @@ const confirmDelete = async (id: string) => {
         return
       }
       
-      console.log('Website deleted successfully')
+      // Website deleted successfully
       alert(`Website "${website.name}" has been deleted successfully.`)
     } catch (error: any) {
-      console.error('Error deleting website:', error)
+      // Error deleting website
       alert(`Error deleting website: ${error.message || 'An unexpected error occurred'}`)
     }
   }
