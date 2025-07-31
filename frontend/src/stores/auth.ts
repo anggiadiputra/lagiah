@@ -50,6 +50,8 @@ export const useAuthStore = defineStore('auth', () => {
       // Use fetch directly to bypass any axios interceptor issues
       const response = await fetch('http://localhost:3004/api/v1/auth/login', {
         method: 'POST',
+        mode: 'cors',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -57,6 +59,7 @@ export const useAuthStore = defineStore('auth', () => {
       });
       
       console.log('🔍 [AUTH] Fetch response status:', response.status);
+      console.log('🔍 [AUTH] Fetch response headers:', response.headers);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -136,6 +139,8 @@ export const useAuthStore = defineStore('auth', () => {
       // Fetching user profile with stored token
       const response = await fetch('http://localhost:3004/api/v1/auth/me', {
         method: 'GET',
+        mode: 'cors',
+        credentials: 'include',
         headers: {
           'Authorization': `Bearer ${storedToken}`,
           'Content-Type': 'application/json',
