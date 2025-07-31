@@ -1,6 +1,35 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import api from '../services/api-adapter'
+import axios from 'axios'
+
+// Get API base URL from environment or use default
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3004/api/v1'
+
+// Create axios instance for auth
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest'
+  },
+  timeout: 30000
+})
+
+// Add request interceptor to include token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('auth_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
 
 interface User {
   id: string
@@ -18,30 +47,26 @@ interface LoginCredentials {
 export const useAuthStore = defineStore('auth', () => {
   // State
   const user = ref<User | null>(null)
-  const token = ref<string | null>(localStorage.getItem('auth_token'))
+  const token = ref<string | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
 
   // Getters
-  const isAuthenticated = computed(() => !!token.value)
+  const isAuthenticated = computed(() => !!user.value && !!token.value)
   const isAdmin = computed(() => user.value?.role === 'ADMIN')
-  const isStaff = computed(() => user.value?.role === 'STAFF' || user.value?.role === 'ADMIN')
+  const isStaff = computed(() => user.value?.role === 'STAFF')
   const isFinance = computed(() => user.value?.role === 'FINANCE')
-  
+
   // Role-based access control helpers
   const canCreateDomain = computed(() => isAdmin.value || isStaff.value)
   const canCreateHosting = computed(() => isAdmin.value || isStaff.value)
   const canCreateVPS = computed(() => isAdmin.value || isStaff.value)
   const canCreateWebsite = computed(() => isAdmin.value || isStaff.value)
   const canAccessSettings = computed(() => isAdmin.value)
-  const canAccessUsers = computed(() => isAdmin.value)
-  
-  // Domain management access - for viewing modal (ADMIN, STAFF, FINANCE can view)
+  const canAccessUsers = computed(() => isAdmin.value || isStaff.value)
   const canAccessDomainManagement = computed(() => isAdmin.value || isStaff.value)
-  
-  // Domain management view access - for viewing modal content (ADMIN, STAFF, FINANCE can view)
   const canViewDomainManagement = computed(() => isAdmin.value || isStaff.value || isFinance.value)
-  
+
   // Actions
   async function login(credentials: LoginCredentials) {
     loading.value = true
@@ -145,6 +170,36 @@ export const useAuthStore = defineStore('auth', () => {
       return null
     }
   }
+
+  async function initialize() {
+    const storedToken = localStorage.getItem('auth_token')
+    
+    if (storedToken) {
+      token.value = storedToken
+      
+      try {
+        // Fetch user data from API
+        const userData = await fetchUserProfile()
+        if (userData) {
+          user.value = userData
+        } else {
+          // Token is invalid, clear it
+          await logout()
+        }
+      } catch (err) {
+        // Token is invalid, clear it
+        await logout()
+      }
+    }
+  }
+
+  function clearAuth() {
+    user.value = null
+    token.value = null
+    error.value = null
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('auth_remember')
+  }
   
   // Return store
   return {
@@ -173,6 +228,7 @@ export const useAuthStore = defineStore('auth', () => {
     // Actions
     login,
     logout,
-    initialize
+    initialize,
+    clearAuth
   }
 }) 
