@@ -14,28 +14,25 @@ export const useHostingStore = defineStore('hosting', () => {
     loading.value = true
     error.value = null
     try {
-      console.log('[HostingStore] Fetching hostings with params:', params)
+      // Fetching hostings with params
       const response = await api.getHostings(params)
-      console.log('[HostingStore] Raw API response:', response)
-      console.log('[HostingStore] Response status:', response?.data?.status)
-      console.log('[HostingStore] Response data:', response?.data)
+              // Raw API response received
       
       // Handle both response formats (direct data or nested in response.data)
       const responseData = response.data ? response.data : response
       
       if (responseData && responseData.status === 'success') {
-        console.log('[HostingStore] Setting hostings to:', responseData.data?.items)
+        // Setting hostings data
         hostings.value = responseData.data?.items || []
         pagination.value = responseData.data?.pagination || null
-        console.log('[HostingStore] Hostings loaded:', hostings.value.length)
-        console.log('[HostingStore] Hostings after setting:', hostings.value)
+        // Hostings loaded successfully
       } else {
-        console.log('[HostingStore] Response not successful:', responseData)
+        // Response not successful
         throw new Error(responseData?.message || 'Failed to fetch hostings.')
       }
     } catch (err: any) {
       error.value = err.message || 'An unexpected error occurred.'
-      console.error('[HostingStore] Error fetching hostings:', err)
+      // Error fetching hostings
     } finally {
       loading.value = false
     }
@@ -76,7 +73,7 @@ export const useHostingStore = defineStore('hosting', () => {
       }
     } catch (err: any) {
       error.value = err.message || 'An unexpected error occurred.'
-      console.error(`[HostingStore] Error fetching hosting ${id}:`, err)
+      // Error fetching hosting
       return null
     } finally {
       loading.value = false
@@ -109,7 +106,7 @@ export const useHostingStore = defineStore('hosting', () => {
         Object.entries(hostingData).map(([key, value]) => [key, value === undefined ? null : value])
       );
       
-      console.log('[HostingStore] Creating hosting with data:', cleanData);
+      // Creating hosting with data
       
       const response = await api.createHosting(cleanData)
       
@@ -127,7 +124,7 @@ export const useHostingStore = defineStore('hosting', () => {
                               : 'Failed to create hosting.');
         
         error.value = errorMessage;
-        console.error('[HostingStore] Error from API:', responseData);
+        // Error from API
         throw new Error(errorMessage);
       }
     } catch (err: any) {
@@ -140,7 +137,7 @@ export const useHostingStore = defineStore('hosting', () => {
       }
       
       error.value = errorMessage;
-      console.error('[HostingStore] Error creating hosting:', err);
+      // Error creating hosting
       return { status: 'error', message: errorMessage, error: err }
     } finally {
       loading.value = false
@@ -180,7 +177,7 @@ export const useHostingStore = defineStore('hosting', () => {
       }
       
       error.value = errorMessage
-      console.error('[HostingStore] Error updating hosting:', err)
+      // Error updating hosting
       return { status: 'error', message: errorMessage, error: err }
     } finally {
       loading.value = false
@@ -222,7 +219,7 @@ export const useHostingStore = defineStore('hosting', () => {
       }
       
       error.value = errorMessage
-      console.error('[HostingStore] Error deleting hosting:', err)
+      // Error deleting hosting
       return { status: 'error', message: errorMessage, error: err }
     } finally {
       loading.value = false

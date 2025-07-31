@@ -695,7 +695,7 @@ const getMainDomain = (domains: any[]) => {
 // Handle filter changes
 const handleFilterChange = () => {
   // No API call needed for client-side filtering
-  console.log('Filter changed - Status:', statusFilter.value, 'Provider:', providerFilter.value)
+      // Filter changed
 }
 
 onMounted(() => {
@@ -719,21 +719,21 @@ const handleSave = async (hostingData: Partial<Hosting>) => {
     if (selectedHosting.value) {
       const result = await hostingStore.updateHosting(selectedHosting.value.id, hostingData)
       if (result && result.status === 'error') {
-        console.error('Error updating hosting:', result.message);
+        // Error updating hosting
         modalError.value = result.message;
         return;
       }
     } else {
       const response = await hostingStore.createHosting(hostingData)
       if (response && response.status === 'error') {
-        console.error('Error creating hosting:', response.message);
+        // Error creating hosting
         modalError.value = response.message;
         return;
       }
     }
     closeModal()
   } catch (error: any) {
-    console.error('Error in handleSave:', error);
+    // Error in handleSave
     modalError.value = error.message || 'An unexpected error occurred';
   }
 }
@@ -767,12 +767,12 @@ const confirmDelete = async (id: string) => {
       }
       
       // Success - hosting was deleted
-      console.log('Hosting deleted successfully')
+      // Hosting deleted successfully
       // Show success message
       alert(`Hosting account "${hosting.provider}" has been deleted successfully.`)
     } catch (error: any) {
       // Handle any unexpected errors
-      console.error('Error deleting hosting:', error)
+      // Error deleting hosting
       alert(`Error deleting hosting: ${error.message || 'An unexpected error occurred'}`)
     }
   }
@@ -802,12 +802,12 @@ const copyToClipboard = async (hostingId: string) => {
     if (password) {
       await navigator.clipboard.writeText(password)
       alert('Password copied to clipboard!')
-      console.log('Copied to clipboard:', password)
+      // Copied to clipboard
     } else {
       alert('No password available for this hosting')
     }
   } catch (err) {
-    console.error('Failed to copy to clipboard:', err)
+          // Failed to copy to clipboard
     alert('Failed to copy password to clipboard')
   }
 }
