@@ -63,9 +63,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   // Fetch dashboard stats
   const fetchDashboardStats = async () => {
-    loading.value = true
-    error.value = null
     try {
+      loading.value = true
       const response = await api.getDashboardStats()
       
       if (response && response.status === 'success') {
@@ -75,7 +74,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
       }
     } catch (err: any) {
       error.value = err.message || 'An error occurred while fetching dashboard stats'
-      console.error('[DashboardStore] Error fetching stats:', err)
     } finally {
       loading.value = false
     }
@@ -92,7 +90,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
         throw new Error(response?.message || 'Failed to fetch recent activity')
       }
     } catch (err: any) {
-      console.error('[DashboardStore] Error fetching recent activity:', err)
+      // Handle error silently
     }
   }
 
@@ -107,12 +105,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
         throw new Error(response?.message || 'Failed to fetch expiring domains')
       }
     } catch (err: any) {
-      console.error('[DashboardStore] Error fetching expiring domains:', err)
-      console.error('[DashboardStore] Error details:', {
-        message: err.message,
-        status: err.response?.status,
-        data: err.response?.data
-      })
       // Set empty array to prevent UI errors
       expiringDomains.value = []
     }
@@ -129,7 +121,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
         throw new Error(response?.message || 'Failed to fetch expiring hosting')
       }
     } catch (err: any) {
-      console.error('[DashboardStore] Error fetching expiring hosting:', err)
+      // Handle error silently
     }
   }
 
@@ -144,12 +136,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
         throw new Error(response?.message || 'Failed to fetch expiring VPS')
       }
     } catch (err: any) {
-      console.error('[DashboardStore] Error fetching expiring VPS:', err)
-      console.error('[DashboardStore] Error details:', {
-        message: err.message,
-        status: err.response?.status,
-        data: err.response?.data
-      })
       // Set empty array to prevent UI errors
       expiringVPS.value = []
     }
