@@ -1,0 +1,270 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String        @id @default(cuid())
+  email      String        @unique
+  password   String
+  name       String?
+  role       UserRole      @default(VIEWER)
+  isActive   Boolean       @default(true)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  activities ActivityLog[]
+  domains    Domain[]
+  hosting    Hosting[]
+  sessions   Session[]
+  vps        VPS[]
+  websites   Website[]
+
+  @@map("users")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "sessions_userId_fkey")
+  @@map("sessions")
+}
+
+model Domain {
+  id            String        @id @default(cuid())
+  name          String        @unique
+  registrar     String?
+  status        DomainStatus  @default(ACTIVE)
+  registeredAt  DateTime?
+  expiresAt     DateTime?
+  nameservers   Json?
+  whoisData     Json?
+  notes         String?       @db.Text
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  createdBy     String
+  hostingId     String?
+  vpsId         String?
+  isMainDomain  Boolean       @default(false)
+  domainHosting String?
+  activities    ActivityLog[]
+  user          User          @relation(fields: [createdBy], references: [id])
+  hosting       Hosting?      @relation(fields: [hostingId], references: [id])
+  vps           VPS?          @relation(fields: [vpsId], references: [id])
+  websites      Website[]
+
+  @@index([expiresAt])
+  @@index([createdBy])
+  @@index([hostingId])
+  @@index([vpsId])
+  @@index([isMainDomain])
+  @@index([status])
+  @@index([registrar])
+  @@index([createdAt])
+  @@index([name])
+  @@map("domains")
+}
+
+model Hosting {
+  id           String        @id @default(cuid())
+  name         String
+  provider     String
+  status       HostingStatus @default(ACTIVE)
+  planName     String?
+  resources    Json?
+  cpanelUrl    String?
+  username     String?
+  password     String?
+  expiresAt    DateTime?
+  notes        String?       @db.Text
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  createdBy    String
+  activities   ActivityLog[]
+  domains      Domain[]
+  user         User          @relation(fields: [createdBy], references: [id])
+  websites     Website[]
+
+  @@index([expiresAt])
+  @@index([createdBy])
+  @@map("hosting")
+}
+
+model VPS {
+  id           String        @id @default(cuid())
+  name         String
+  provider     String
+  status       VPSStatus     @default(ACTIVE)
+  ipAddress    String?
+  specs        Json?
+  sshPort      Int?          @default(22)
+  sshKey       String?       @db.Text
+  username     String?
+  password     String?
+  expiresAt    DateTime?
+  notes        String?       @db.Text
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  createdBy    String
+  cpanelUrl    String?
+  activities   ActivityLog[]
+  domains      Domain[]
+  user         User          @relation(fields: [createdBy], references: [id])
+  websites     Website[]
+
+  @@index([expiresAt])
+  @@index([createdBy])
+  @@map("vps")
+}
+
+model Website {
+  id           String        @id @default(cuid())
+  name         String
+  url          String?
+  status       WebsiteStatus @default(ACTIVE)
+  cms          String?
+  cmsVersion   String?
+  phpVersion   String?
+  sslStatus    SSLStatus     @default(NONE)
+  sslExpiry    DateTime?
+  backupStatus String?
+  lastBackup   DateTime?
+  notes        String?       @db.Text
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  createdBy    String
+  domainId     String?
+  hostingId    String?
+  vpsId        String?
+  password     String?
+  username     String?
+  activities   ActivityLog[]
+  user         User          @relation(fields: [createdBy], references: [id])
+  domain       Domain?       @relation(fields: [domainId], references: [id])
+  hosting      Hosting?      @relation(fields: [hostingId], references: [id])
+  vps          VPS?          @relation(fields: [vpsId], references: [id])
+
+  @@index([createdBy])
+  @@index([domainId])
+  @@index([hostingId])
+  @@index([vpsId])
+  @@map("websites")
+}
+
+model ActivityLog {
+  id          String       @id @default(cuid())
+  action      ActivityType
+  entity      EntityType
+  entityId    String
+  description String
+  metadata    Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime     @default(now())
+  userId      String
+  domainId    String?
+  hostingId   String?
+  vpsId       String?
+  websiteId   String?
+  domain      Domain?      @relation(fields: [domainId], references: [id])
+  hosting     Hosting?     @relation(fields: [hostingId], references: [id])
+  user        User         @relation(fields: [userId], references: [id])
+  vps         VPS?         @relation(fields: [vpsId], references: [id])
+  website     Website?     @relation(fields: [websiteId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([entity, entityId])
+  @@index([domainId], map: "activity_logs_domainId_fkey")
+  @@index([hostingId], map: "activity_logs_hostingId_fkey")
+  @@index([vpsId], map: "activity_logs_vpsId_fkey")
+  @@index([websiteId], map: "activity_logs_websiteId_fkey")
+  @@map("activity_logs")
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text
+  type      String   @default("string")
+  category  String   @default("general")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
+
+enum UserRole {
+  ADMIN
+  STAFF
+  FINANCE
+  VIEWER
+}
+
+enum DomainStatus {
+  ACTIVE
+  EXPIRED
+  SUSPENDED
+  TRANSFERRED
+  DELETED
+  AVAILABLE_TO_ORDER
+}
+
+enum HostingStatus {
+  ACTIVE
+  SUSPENDED
+  EXPIRED
+  CANCELLED
+  EXPIRING_SOON
+}
+
+enum VPSStatus {
+  ACTIVE
+  SUSPENDED
+  STOPPED
+  EXPIRED
+  CANCELLED
+}
+
+enum WebsiteStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+  SUSPENDED
+}
+
+enum SSLStatus {
+  NONE
+  ACTIVE
+  EXPIRED
+  PENDING
+}
+
+enum ActivityType {
+  CREATE
+  READ
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  EXPORT
+  IMPORT
+}
+
+enum EntityType {
+  USER
+  DOMAIN
+  HOSTING
+  VPS
+  WEBSITE
+  SETTING
+}
