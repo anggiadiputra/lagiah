@@ -41,23 +41,7 @@ async function getWebsites(req: NextRequest) {
     // Get total count
     const total = await prisma.website.count({ where })
     
-    // Log activity for website listing
-    await logActivity({
-      userId: user.id,
-      action: 'READ',
-      entity: 'WEBSITE',
-      entityId: 'list',
-      description: `Listed websites (page: ${page}, limit: ${limit})`,
-      metadata: {
-        page,
-        limit,
-        total,
-        filters: { status, search },
-        sort
-      },
-      ipAddress: getClientIP(req),
-      userAgent: getUserAgent(req)
-    })
+    // No activity logging for READ operations
     
     // Total websites count
     

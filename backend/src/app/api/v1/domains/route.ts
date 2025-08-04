@@ -89,23 +89,7 @@ async function getDomains(req: NextRequest) {
     const total = await prisma.domain.count({ where })
     const countTime = Date.now() - countStartTime
     
-    // Log activity for domain listing
-    await logActivity({
-      userId: user.id,
-      action: 'READ',
-      entity: 'DOMAIN',
-      entityId: 'list',
-      description: `Listed domains (page: ${page}, limit: ${limit})`,
-      metadata: {
-        page,
-        limit,
-        total,
-        filters: { status: statusParam, registrar: registrarParam, search },
-        sort: `${sort}:${order}`
-      },
-      ipAddress: getClientIP(req),
-      userAgent: getUserAgent(req)
-    })
+    // No activity logging for READ operations
 
     
     // Get domains with error handling and optimized query

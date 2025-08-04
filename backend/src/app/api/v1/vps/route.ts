@@ -54,23 +54,7 @@ async function getVps(req: NextRequest) {
   // Get total count
   const total = await prisma.vPS.count({ where })
   
-  // Log activity for VPS listing
-  await logActivity({
-    userId: user.id,
-    action: 'READ',
-    entity: 'VPS',
-    entityId: 'list',
-    description: `Listed VPS servers (page: ${page}, limit: ${limit})`,
-    metadata: {
-      page,
-      limit,
-      total,
-      filters: { status: statusParam, provider, search },
-      sort: `${sort}:${order}`
-    },
-    ipAddress: getClientIP(req),
-    userAgent: getUserAgent(req)
-  })
+  // No activity logging for READ operations
   
   // Get VPS servers
   const vpsServers = await prisma.vPS.findMany({

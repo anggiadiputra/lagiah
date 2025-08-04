@@ -100,20 +100,7 @@ async function login(req: NextRequest) {
     
     // Token generated successfully
     
-    // Log activity
-    await prisma.activityLog.create({
-      data: {
-        action: 'LOGIN',
-        entity: 'USER',
-        entityId: user.id,
-        description: `User logged in: ${user.email}`,
-        userId: user.id,
-        metadata: {
-          ip: req.headers.get('x-forwarded-for') || 'unknown',
-          userAgent: req.headers.get('user-agent') || 'unknown',
-        }
-      },
-    })
+    // No activity logging for LOGIN operations
     
     // Create response data
     const responseData = {

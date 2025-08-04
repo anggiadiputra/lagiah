@@ -65,21 +65,7 @@ async function getDomain(req: NextRequest, { params }: RouteContext) {
     return errorResponse('Domain not found', 'DOMAIN_NOT_FOUND', 404)
   }
 
-  // Log activity for viewing domain
-  await logActivity({
-    userId: user.id,
-    action: 'READ',
-    entity: 'DOMAIN',
-    entityId: domain.id,
-    description: `Viewed domain: ${domain.name}`,
-    metadata: {
-      domainName: domain.name,
-      domainId: domain.id
-    },
-    ipAddress: getClientIP(req),
-    userAgent: getUserAgent(req),
-    domainId: domain.id
-  })
+  // No activity logging for READ operations
 
   return successResponse(domain)
 }
@@ -204,22 +190,29 @@ async function updateDomain(req: NextRequest, { params }: RouteContext) {
     },
   })
 
-  // Log activity
-  await logActivity({
-    userId: user.id,
-    action: 'UPDATE',
-    entity: 'DOMAIN',
-    entityId: domain.id,
-    description: `Updated domain: ${domain.name}`,
-    metadata: {
-      domainName: domain.name,
-      changes: result.data,
-      previousData: existingDomain
-    },
-    ipAddress: getClientIP(req),
-    userAgent: getUserAgent(req),
-    domainId: domain.id
-  })
+  // Log activity only for domain assignment to hosting/VPS
+  if (result.data.hostingId || result.data.vpsId) {
+    const assignmentType = result.data.hostingId ? 'hosting' : 'VPS'
+    const assignmentId = result.data.hostingId || result.data.vpsId
+    const isMainDomain = result.data.isMainDomain ? 'as main domain' : 'as addon domain'
+    
+    await logActivity({
+      userId: user.id,
+      action: 'UPDATE',
+      entity: 'DOMAIN',
+      entityId: domain.id,
+      description: `Assigned domain ${domain.name} to ${assignmentType} ${assignmentId} ${isMainDomain}`,
+      metadata: {
+        domainName: domain.name,
+        assignmentType,
+        assignmentId,
+        isMainDomain: result.data.isMainDomain
+      },
+      ipAddress: getClientIP(req),
+      userAgent: getUserAgent(req),
+      domainId: domain.id
+    })
+  }
 
   return successResponse(domain)
 }

@@ -124,23 +124,7 @@ export async function GET(request: NextRequest) {
     
     const totalPages = Math.ceil(total / limit)
     
-    // Log activity for user listing
-    await logActivity({
-      userId: authUser.id,
-      action: 'READ',
-      entity: 'USER',
-      entityId: 'list',
-      description: `Listed users (page: ${page}, limit: ${limit})`,
-      metadata: {
-        page,
-        limit,
-        total,
-        filters: { search, role },
-        totalPages
-      },
-      ipAddress: getClientIP(request),
-      userAgent: getUserAgent(request)
-    })
+    // No activity logging for READ operations
     
     return NextResponse.json({
       status: 'success',

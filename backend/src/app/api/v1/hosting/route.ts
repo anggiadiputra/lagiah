@@ -54,23 +54,7 @@ async function getHosting(req: NextRequest) {
   // Get total count
   const total = await prisma.hosting.count({ where })
   
-  // Log activity for hosting listing
-  await logActivity({
-    userId: user.id,
-    action: 'READ',
-    entity: 'HOSTING',
-    entityId: 'list',
-    description: `Listed hosting accounts (page: ${page}, limit: ${limit})`,
-    metadata: {
-      page,
-      limit,
-      total,
-      filters: { status: statusParam, provider },
-      sort: `${sort}:${order}`
-    },
-    ipAddress: getClientIP(req),
-    userAgent: getUserAgent(req)
-  })
+  // No activity logging for READ operations
   
       // Total hosting count
   
