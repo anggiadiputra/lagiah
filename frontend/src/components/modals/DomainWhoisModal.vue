@@ -238,16 +238,14 @@ onMounted(() => {
 // Watch for modal opening - no need to fetch data
 watch(() => props.isOpen, (newValue) => {
   if (newValue && props.domain?.name) {
-    console.log('Modal opened for domain:', props.domain.name)
-    console.log('Using WHOIS data from database:', props.domain.whoisData)
+
   }
 })
 
 // Watch for domain changes - no need to fetch data
 watch(() => props.domain, (newDomain) => {
   if (props.isOpen && newDomain?.name) {
-    console.log('Domain changed to:', newDomain.name)
-    console.log('Using WHOIS data from database:', newDomain.whoisData)
+    // Domain changed, data already available
   }
 })
 
@@ -264,7 +262,6 @@ const formatDateSimple = (dateString: string | null | undefined): string => {
 
 // Get domain ID from WHOIS data
 const getDomainId = (): string => {
-  console.log('WHOIS Info for Domain ID:', whoisInfo.value)
   if (whoisInfo.value?.data?.['Domain ID']) {
     return whoisInfo.value.data['Domain ID']
   }
@@ -273,7 +270,6 @@ const getDomainId = (): string => {
 
 // Get domain status
 const getDomainStatus = (): string => {
-  console.log('WHOIS Info for Status:', whoisInfo.value)
   if (whoisInfo.value?.data?.Status) {
     return whoisInfo.value.data.Status
   }
@@ -288,7 +284,6 @@ const getDomainStatus = (): string => {
 
 // Get DNSSEC status
 const getDnssecStatus = (): string => {
-  console.log('WHOIS Info for DNSSEC:', whoisInfo.value)
   if (whoisInfo.value?.data?.DNSSEC) {
     return whoisInfo.value.data.DNSSEC
   }

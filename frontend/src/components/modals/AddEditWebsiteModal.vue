@@ -456,10 +456,7 @@ const handleSubmit = async () => {
       vpsId: existingVpsId || assignedVps.value?.id || undefined
     }
     
-    console.log('Website data being sent:', {
-      ...websiteData,
-      password: websiteData.password ? '[MASKED]' : 'undefined'
-    })
+
 
     if (isEditing.value && props.website) {
       await websiteStore.updateWebsite(props.website.id, websiteData)
@@ -488,25 +485,13 @@ const resetForm = () => {
 }
 
 const handleDomainChange = () => {
-  console.log('Domain changed to:', form.value.domainId)
-  console.log('Current hosting:', currentHosting.value)
-  console.log('Current VPS:', currentVps.value)
-  
   // Reset hosting/VPS assignment when domain is cleared
   if (!form.value.domainId) {
-    console.log('Domain cleared, resetting hosting/VPS assignment')
+    // Domain cleared
   }
 }
 
 const populateForm = (website: Website) => {
-  console.log('Populating form with website:', website)
-  console.log('Website domain:', website.domain)
-  console.log('Website CMS:', website.cms)
-  console.log('Website notes:', website.notes)
-  console.log('Website username:', website.username)
-  console.log('Website password:', website.password ? '[MASKED]' : 'undefined')
-  console.log('Website hosting:', website.hosting)
-  console.log('Website VPS:', website.vps)
   
   // Reset form first
   form.value = {
@@ -528,24 +513,14 @@ const populateForm = (website: Website) => {
     password: website.password || ''
   }
   
-  console.log('Form populated with:', {
-    ...form.value,
-    password: form.value.password ? '[MASKED]' : 'undefined'
-  })
-  
   // Force reactivity update
   nextTick(() => {
-    console.log('Form after nextTick:', {
-      ...form.value,
-      password: form.value.password ? '[MASKED]' : 'undefined'
-    })
+    // Form updated
   })
 }
 
 // Watch for modal open/close and website changes
 watch(() => props.isOpen, async (isOpen) => {
-  console.log('Modal isOpen changed to:', isOpen)
-  console.log('Current website prop:', props.website)
   
   if (isOpen) {
     await nextTick()

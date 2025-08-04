@@ -66,28 +66,17 @@ export const useDashboardStore = defineStore('dashboard', () => {
   // Fetch dashboard stats
   const fetchDashboardStats = async () => {
     try {
-      console.log('📊 Fetching dashboard stats...')
       const response = await api.getDashboardStats()
-      
-      console.log('📄 Dashboard stats response:', response)
       
       // Handle response format from API
       if (response && response.status === 'success' && response.data) {
         stats.value = response.data
         error.value = null
-        console.log('✅ Dashboard stats fetched successfully')
       } else {
-        console.warn('⚠️ Unexpected response format:', response)
         throw new Error('Unexpected response format from server')
       }
     } catch (err: any) {
-      console.error('❌ Error fetching dashboard stats:', err)
-      console.error('📋 Error details:', {
-        message: err.message,
-        status: err.response?.status,
-        statusText: err.response?.statusText,
-        data: err.response?.data
-      })
+      console.error('Error fetching dashboard stats:', err)
       
       // Don't set error for 401 - let the auth system handle it
       if (err.response?.status !== 401) {
@@ -101,26 +90,15 @@ export const useDashboardStore = defineStore('dashboard', () => {
   // Fetch recent activity
   const fetchRecentActivity = async (limit: number = 5) => {
     try {
-      console.log('📝 Fetching recent activity...')
       const response = await api.getRecentActivity({ limit })
-      
-      console.log('📄 Recent activity response:', response)
       
       if (response && response.status === 'success' && response.data) {
         recentActivity.value = response.data?.items || response.data || []
-        console.log('✅ Recent activity fetched successfully')
       } else {
-        console.warn('⚠️ Unexpected response format:', response)
         recentActivity.value = []
       }
     } catch (err: any) {
-      console.error('❌ Error fetching recent activity:', err)
-      console.error('📋 Error details:', {
-        message: err.message,
-        status: err.response?.status,
-        statusText: err.response?.statusText,
-        data: err.response?.data
-      })
+      console.error('Error fetching recent activity:', err)
       
       // Don't set error for 401 - let the auth system handle it
       if (err.response?.status !== 401) {
@@ -133,26 +111,15 @@ export const useDashboardStore = defineStore('dashboard', () => {
   // Fetch expiring domains
   const fetchExpiringDomains = async (days: number = 30) => {
     try {
-      console.log('🌐 Fetching expiring domains...')
       const response = await api.getExpiringDomains({ days })
-      
-      console.log('📄 Expiring domains response:', response)
       
       if (response && response.status === 'success' && response.data) {
         expiringDomains.value = response.data?.items || response.data || []
-        console.log('✅ Expiring domains fetched successfully')
       } else {
-        console.warn('⚠️ Unexpected response format:', response)
         expiringDomains.value = []
       }
     } catch (err: any) {
-      console.error('❌ Error fetching expiring domains:', err)
-      console.error('📋 Error details:', {
-        message: err.message,
-        status: err.response?.status,
-        statusText: err.response?.statusText,
-        data: err.response?.data
-      })
+      console.error('Error fetching expiring domains:', err)
       
       // Don't set error for 401 - let the auth system handle it
       if (err.response?.status !== 401) {
@@ -197,26 +164,15 @@ export const useDashboardStore = defineStore('dashboard', () => {
   // Fetch expiring VPS
   const fetchExpiringVPS = async (days: number = 30) => {
     try {
-      console.log('🖥️ Fetching expiring VPS...')
       const response = await api.getExpiringVPS({ days })
-      
-      console.log('📄 Expiring VPS response:', response)
       
       if (response && response.status === 'success' && response.data) {
         expiringVPS.value = response.data?.items || response.data || []
-        console.log('✅ Expiring VPS fetched successfully')
       } else {
-        console.warn('⚠️ Unexpected response format:', response)
         expiringVPS.value = []
       }
     } catch (err: any) {
-      console.error('❌ Error fetching expiring VPS:', err)
-      console.error('📋 Error details:', {
-        message: err.message,
-        status: err.response?.status,
-        statusText: err.response?.statusText,
-        data: err.response?.data
-      })
+      console.error('Error fetching expiring VPS:', err)
       
       // Don't set error for 401 - let the auth system handle it
       if (err.response?.status !== 401) {
@@ -229,14 +185,10 @@ export const useDashboardStore = defineStore('dashboard', () => {
   // Fetch all dashboard data
   const fetchDashboardData = async () => {
     try {
-      console.log('🚀 Starting dashboard data fetch...')
-      
       // Check if user is authenticated before making API calls
       const token = localStorage.getItem('auth_token')
-      console.log('🔑 Token check:', !!token)
       
       if (!token) {
-        console.log('❌ No auth token found, skipping dashboard data fetch')
         // Set error message for user
         error.value = 'Please login to view dashboard data'
         return
@@ -244,32 +196,22 @@ export const useDashboardStore = defineStore('dashboard', () => {
       
       // Check if we have a valid user object
       const authStore = useAuthStore()
-      console.log('👤 Auth store state:', {
-        isAuthenticated: authStore.isAuthenticated,
-        user: authStore.user?.id || 'no user'
-      })
       
       if (!authStore.user || authStore.user.id === 'unknown') {
-        console.log('⚠️ No valid user found, attempting to initialize auth...')
         // Try to initialize auth store first
         try {
           await authStore.initialize()
-          console.log('✅ Auth store initialized')
         } catch (error: any) {
-          console.log('❌ Failed to initialize auth store, skipping dashboard data fetch')
           error.value = 'Authentication failed. Please login again.'
           return
         }
         
         // Check again after initialization
         if (!authStore.user || authStore.user.id === 'unknown') {
-          console.log('❌ Still no valid user after auth initialization, skipping dashboard data fetch')
           error.value = 'User session expired. Please login again.'
           return
         }
       }
-      
-      console.log('✅ Authentication verified, starting API calls...')
       
       // Add retry mechanism with better error handling
       let retryCount = 0
@@ -277,8 +219,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
       
       while (retryCount < maxRetries) {
         try {
-          console.log(`🔄 Attempt ${retryCount + 1} of ${maxRetries + 1}`)
-          
           // Use Promise.allSettled instead of Promise.all to prevent one failure from stopping all requests
           const results = await Promise.allSettled([
             fetchDashboardStats(),
@@ -292,7 +232,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
           const failedRequests = results.filter(result => result.status === 'rejected')
           if (failedRequests.length === 0) {
             // All requests succeeded
-            console.log('✅ All dashboard data fetched successfully')
             error.value = null // Clear any errors
             break
           } else {

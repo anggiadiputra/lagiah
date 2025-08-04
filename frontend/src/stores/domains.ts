@@ -106,10 +106,7 @@ export const useDomainStore = defineStore('domains', () => {
       if (response && response.status === 'success' && response.data && response.data.items) {
         if (queryParams.limit && queryParams.limit > 100) { // Assuming a large limit means fetching all
           allDomains.value = response.data.items
-          console.log('Fetched all domains for selector:', allDomains.value.length);
-          console.log('Sample domain data:', allDomains.value[0]);
-          console.log('Domains with hosting:', allDomains.value.filter(d => d.hosting !== null).length);
-          console.log('Domains without hosting:', allDomains.value.filter(d => d.hosting === null).length);
+          
         } else {
           domains.value = response.data.items
           // Update pagination from API response
@@ -198,12 +195,12 @@ export const useDomainStore = defineStore('domains', () => {
       }
       
       const response = await api.createDomain(domainData)
-      console.log('[DomainStore] Create domain response:', response)
+  
       
       // Handle response format from API
       if (response && response.status === 'success' && response.data) {
         domains.value.unshift(response.data)
-        console.log('[DomainStore] Domain added to list successfully')
+    
         return response
       } else {
         console.warn('[DomainStore] Unexpected response format:', response)
@@ -225,9 +222,9 @@ export const useDomainStore = defineStore('domains', () => {
     error.value = null
     
     try {
-      console.log(`[DomainStore] Updating domain ${id} with data:`, domainData)
+  
       const response = await api.updateDomain(id, domainData)
-      console.log('[DomainStore] Update domain response:', response)
+  
       
       // Check if response is valid
       if (response && response.status === 'success' && response.data) {
@@ -267,17 +264,17 @@ export const useDomainStore = defineStore('domains', () => {
   async function deleteDomain(id: string) {
     loading.value = true
     error.value = null
-    console.log(`[DomainStore] Deleting domain ID: ${id}`)
+
     
     try {
       const response = await api.deleteDomain(id)
-      console.log('[DomainStore] API response from delete:', response)
+  
       
       if (response && response.status === 'success') {
         // Remove the domain from the local state directly
         const initialCount = domains.value.length
         domains.value = domains.value.filter(d => d.id !== id)
-        console.log(`[DomainStore] Domain ${id} removed from local state. Count changed from ${initialCount} to ${domains.value.length}.`)
+    
         
         // Also clear currentDomain if it was the one deleted
         if (currentDomain.value && currentDomain.value.id === id) {
@@ -305,9 +302,9 @@ export const useDomainStore = defineStore('domains', () => {
     whoisData.value = null
     
     try {
-      console.log('Domain store: Fetching Whois data for', domain)
+  
       const response = await api.lookupWhois(domain)
-      console.log('Domain store: Whois API response received', response)
+  
       
       // Check if response is valid and has the expected format
       if (response && response.status === 'success' && response.data) {
@@ -339,24 +336,24 @@ export const useDomainStore = defineStore('domains', () => {
   async function refreshWhoisData(id: string) {
     loading.value = true
     error.value = null
-    console.log(`[DomainStore] Refreshing Whois for ID: ${id}`)
+
     
     try {
       const response = await api.refreshWhois(id)
-      console.log('[DomainStore] API response from refresh:', response)
+  
 
       if (response && response.status === 'success' && response.data) {
         // Update the domain in the main list
         const index = domains.value.findIndex(d => d.id === id)
         if (index !== -1) {
           domains.value[index] = response.data
-          console.log(`[DomainStore] Updated domain ${id} in the list.`)
+      
         }
         
         // Update the current domain if it's the one being viewed
         if (currentDomain.value && currentDomain.value.id === id) {
           currentDomain.value = response.data
-          console.log(`[DomainStore] Updated currentDomain.`)
+      
         }
         
         return response

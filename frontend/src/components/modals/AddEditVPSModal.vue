@@ -448,7 +448,7 @@ const submitForm = () => {
   )
   
   // Log the data being sent to API for debugging
-  console.log('Submitting VPS data:', JSON.stringify(cleanData, null, 2))
+  
   
   emit('save', cleanData)
 }

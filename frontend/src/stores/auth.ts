@@ -110,12 +110,10 @@ export const useAuthStore = defineStore('auth', () => {
     const storedToken = localStorage.getItem('auth_token')
     
     if (!storedToken) {
-      console.log('❌ No stored token found, cannot fetch user profile')
       return null
     }
     
     try {
-      console.log('📞 Fetching user profile from API...')
       // Use apiService instead of hardcoded URL
       const response = await apiService.getProfile()
       

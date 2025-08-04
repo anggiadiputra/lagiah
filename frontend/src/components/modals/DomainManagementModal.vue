@@ -315,19 +315,19 @@ watch(currentDomainSearch, () => {
 // Watch for current domains changes to refresh data
 watch(currentDomains, () => {
   // Force refresh when current domains change
-  console.log('Current domains changed:', currentDomains.value.length)
+  
 }, { deep: true })
 
 // Watch for available domains changes
 watch(availableDomains, () => {
   // Force refresh when available domains change
-  console.log('Available domains changed:', availableDomains.value.length)
+  
 }, { deep: true })
 
 // ✅ IMPROVED: Watch for entityId changes to refresh data
 watch(() => props.entityId, async () => {
   if (props.entityId && props.open) {
-    console.log('Entity ID changed, refreshing domains data...')
+
     try {
       await domainsStore.fetchDomains({ limit: 500 })
     } catch (error) {
