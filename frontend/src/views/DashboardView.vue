@@ -244,85 +244,84 @@
               <thead class="bg-gray-50">
                 <tr>
                   <th scope="col" class="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
+                    User
                   </th>
                   <th scope="col" class="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
+                    Action
                   </th>
                   <th scope="col" class="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Provider
+                    Entity
                   </th>
                   <th scope="col" class="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Expires
+                    Details
                   </th>
                   <th scope="col" class="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                    Time
                   </th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="item in dashboardStore.allExpiringItems" :key="`${item.type}-${item.id}`" class="hover:bg-gray-50 transition-colors duration-150">
+                <tr v-for="activity in dashboardStore.recentActivity" :key="activity.id" class="hover:bg-gray-50 transition-colors duration-150">
                   <td class="px-8 py-5 whitespace-nowrap">
                     <div class="flex items-center">
-                      <!-- Domain Icon -->
-                      <svg v-if="item.type === 'DOMAIN'" class="h-5 w-5 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                      </svg>
-                      <!-- Hosting Icon -->
-                      <svg v-else-if="item.type === 'HOSTING'" class="h-5 w-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
-                      </svg>
-                      <!-- VPS Icon -->
-                      <svg v-else-if="item.type === 'VPS'" class="h-5 w-5 text-purple-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                      </svg>
-                      <span class="text-sm font-medium text-gray-900">{{ item.typeLabel }}</span>
-                    </div>
-                  </td>
-                  <td class="px-8 py-5 whitespace-nowrap">
-                    <div 
-                      v-if="item.type === 'DOMAIN'"
-                      class="text-sm font-medium text-gray-900 cursor-pointer hover:text-primary-600 transition-colors duration-200"
-                      @click="openWhoisModal(item)"
-                      title="Click to view WHOIS information"
-                    >
-                      {{ item.name }}
-                    </div>
-                    <div v-else class="text-sm font-medium text-gray-900">
-                      {{ item.name }}
-                    </div>
-                  </td>
-                  <td class="px-8 py-5 whitespace-nowrap text-sm text-gray-500">{{ item.provider }}</td>
-                  <td class="px-8 py-5 whitespace-nowrap text-sm text-gray-900">
-                    <div :class="{
-                      'text-red-600 font-medium': item.daysUntilExpiry <= 7,
-                      'text-orange-600 font-medium': item.daysUntilExpiry > 7 && item.daysUntilExpiry <= 30,
-                      'text-gray-900': item.daysUntilExpiry > 30
-                    }">
-                      {{ item.expiryDate }} 
-                      <span class="text-xs">
-                        ({{ item.daysUntilExpiry }} days)
-                      </span>
+                      <div class="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
+                        <span class="text-sm font-medium text-primary-700">{{ activity.userName?.charAt(0)?.toUpperCase() || 'U' }}</span>
+                      </div>
+                      <div class="ml-3">
+                        <div class="text-sm font-medium text-gray-900">{{ activity.userName || 'Unknown User' }}</div>
+                      </div>
                     </div>
                   </td>
                   <td class="px-8 py-5 whitespace-nowrap">
                     <span :class="{
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800': item.status === 'ACTIVE',
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800': item.status === 'EXPIRED',
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800': item.status === 'EXPIRING',
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800': activity.action === 'CREATE',
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800': activity.action === 'READ',
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800': activity.action === 'UPDATE',
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800': activity.action === 'DELETE',
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800': activity.action === 'LOGIN',
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800': activity.action === 'LOGOUT'
                     }">
-                      {{ item.status }}
+                      {{ activity.action }}
                     </span>
                   </td>
+                  <td class="px-8 py-5 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <!-- Entity Type Icon -->
+                      <svg v-if="activity.entityType === 'DOMAIN'" class="h-5 w-5 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                      </svg>
+                      <svg v-else-if="activity.entityType === 'HOSTING'" class="h-5 w-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+                      </svg>
+                      <svg v-else-if="activity.entityType === 'VPS'" class="h-5 w-5 text-purple-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                      <svg v-else-if="activity.entityType === 'WEBSITE'" class="h-5 w-5 text-indigo-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                      </svg>
+                      <svg v-else-if="activity.entityType === 'USER'" class="h-5 w-5 text-gray-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      <span class="text-sm font-medium text-gray-900">{{ activity.entityType }}</span>
+                    </div>
+                  </td>
+                  <td class="px-8 py-5">
+                    <div class="text-sm text-gray-900 max-w-xs truncate" :title="activity.entityName">
+                      {{ activity.entityName }}
+                    </div>
+                  </td>
+                  <td class="px-8 py-5 whitespace-nowrap text-sm text-gray-500">
+                    {{ formatTimeAgo(activity.createdAt) }}
+                  </td>
                 </tr>
-                <tr v-if="dashboardStore.allExpiringItems.length === 0">
+                <tr v-if="dashboardStore.recentActivity.length === 0">
                   <td colspan="5" class="px-8 py-12 text-center">
                     <div class="text-gray-500">
                       <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                       </svg>
-                      <h3 class="mt-3 text-sm font-medium text-gray-900">No items expiring soon</h3>
-                      <p class="mt-2 text-sm text-gray-500">All your items are up to date.</p>
+                      <h3 class="mt-3 text-sm font-medium text-gray-900">No recent activity</h3>
+                      <p class="mt-2 text-sm text-gray-500">Activity logs will appear here as users interact with the system.</p>
                     </div>
                   </td>
                 </tr>
@@ -333,73 +332,66 @@
           <!-- Mobile Activity View -->
           <div class="lg:hidden">
             <div class="p-6 space-y-4">
-              <div v-for="item in dashboardStore.allExpiringItems" :key="`${item.type}-${item.id}`" class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div v-for="activity in dashboardStore.recentActivity" :key="activity.id" class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                 <div class="flex items-start justify-between">
                   <div class="flex items-center space-x-3">
-                    <!-- Domain Icon -->
-                    <svg v-if="item.type === 'DOMAIN'" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                    </svg>
-                    <!-- Hosting Icon -->
-                    <svg v-else-if="item.type === 'HOSTING'" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
-                    </svg>
-                    <!-- VPS Icon -->
-                    <svg v-else-if="item.type === 'VPS'" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                    </svg>
-                    <div>
+                    <div class="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
+                      <span class="text-sm font-medium text-primary-700">{{ activity.userName?.charAt(0)?.toUpperCase() || 'U' }}</span>
+                    </div>
+                    <div class="flex-1">
                       <div class="flex items-center space-x-2">
-                        <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">{{ item.typeLabel }}</span>
+                        <span class="text-sm font-medium text-gray-900">{{ activity.userName || 'Unknown User' }}</span>
                         <span :class="{
-                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800': item.status === 'ACTIVE',
-                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800': item.status === 'EXPIRED',
-                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800': item.status === 'EXPIRING',
+                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800': activity.action === 'CREATE',
+                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800': activity.action === 'READ',
+                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800': activity.action === 'UPDATE',
+                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800': activity.action === 'DELETE',
+                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800': activity.action === 'LOGIN',
+                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800': activity.action === 'LOGOUT'
                         }">
-                          {{ item.status }}
+                          {{ activity.action }}
                         </span>
                       </div>
-                      <div 
-                        v-if="item.type === 'DOMAIN'"
-                        class="text-sm font-medium text-gray-900 cursor-pointer hover:text-primary-600 transition-colors duration-200 mt-1"
-                        @click="openWhoisModal(item)"
-                        title="Click to view WHOIS information"
-                      >
-                        {{ item.name }}
+                      <div class="flex items-center space-x-2 mt-1">
+                        <!-- Entity Type Icon -->
+                        <svg v-if="activity.entityType === 'DOMAIN'" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                        </svg>
+                        <svg v-else-if="activity.entityType === 'HOSTING'" class="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+                        </svg>
+                        <svg v-else-if="activity.entityType === 'VPS'" class="h-4 w-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        <svg v-else-if="activity.entityType === 'WEBSITE'" class="h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                        </svg>
+                        <svg v-else-if="activity.entityType === 'USER'" class="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">{{ activity.entityType }}</span>
                       </div>
-                      <div v-else class="text-sm font-medium text-gray-900 mt-1">
-                        {{ item.name }}
+                      <div class="text-sm text-gray-900 mt-1 truncate" :title="activity.entityName">
+                        {{ activity.entityName }}
                       </div>
-                      <div class="text-xs text-gray-500 mt-1">{{ item.provider }}</div>
                     </div>
                   </div>
                   <div class="text-right">
-                    <div :class="{
-                      'text-red-600 font-medium': item.daysUntilExpiry <= 7,
-                      'text-orange-600 font-medium': item.daysUntilExpiry > 7 && item.daysUntilExpiry <= 30,
-                      'text-gray-900': item.daysUntilExpiry > 30
-                    }" class="text-sm">
-                      {{ item.expiryDate }}
-                    </div>
-                    <div :class="{
-                      'text-red-600': item.daysUntilExpiry <= 7,
-                      'text-orange-600': item.daysUntilExpiry > 7 && item.daysUntilExpiry <= 30,
-                      'text-gray-500': item.daysUntilExpiry > 30
-                    }" class="text-xs mt-1">
-                      {{ item.daysUntilExpiry }} days
+                    <div class="text-xs text-gray-500">
+                      {{ formatTimeAgo(activity.createdAt) }}
                     </div>
                   </div>
                 </div>
               </div>
               
               <!-- Empty state for mobile -->
-              <div v-if="dashboardStore.allExpiringItems.length === 0" class="text-center py-8">
+              <div v-if="dashboardStore.recentActivity.length === 0" class="text-center py-8">
                 <div class="text-gray-500">
                   <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                   </svg>
-                  <h3 class="mt-3 text-sm font-medium text-gray-900">No items expiring soon</h3>
-                  <p class="mt-2 text-sm text-gray-500">All your items are up to date.</p>
+                  <h3 class="mt-3 text-sm font-medium text-gray-900">No recent activity</h3>
+                  <p class="mt-2 text-sm text-gray-500">Activity logs will appear here as users interact with the system.</p>
                 </div>
               </div>
             </div>
