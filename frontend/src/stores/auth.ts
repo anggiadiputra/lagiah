@@ -47,7 +47,8 @@ export const useAuthStore = defineStore('auth', () => {
     
     try {
       // Use fetch directly to bypass any axios interceptor issues
-      const response = await fetch('http://localhost:3004/api/v1/auth/login', {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3004'
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
         method: 'POST',
         mode: 'cors',
         credentials: 'include',
