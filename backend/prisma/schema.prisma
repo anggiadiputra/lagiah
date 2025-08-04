@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -35,7 +35,7 @@ model Session {
   createdAt    DateTime @default(now())
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId], map: "sessions_userId_fkey")
+  @@index([userId])
   @@map("sessions")
 }
 
@@ -184,10 +184,10 @@ model ActivityLog {
   @@index([userId])
   @@index([createdAt])
   @@index([entity, entityId])
-  @@index([domainId], map: "activity_logs_domainId_fkey")
-  @@index([hostingId], map: "activity_logs_hostingId_fkey")
-  @@index([vpsId], map: "activity_logs_vpsId_fkey")
-  @@index([websiteId], map: "activity_logs_websiteId_fkey")
+  @@index([domainId])
+  @@index([hostingId])
+  @@index([vpsId])
+  @@index([websiteId])
   @@map("activity_logs")
 }
 

@@ -1,0 +1,74 @@
+# 🚀 Vercel Environment Variables
+# Copy dan paste ke Vercel Dashboard → Settings → Environment Variables
+
+# ========================================
+# REQUIRED VARIABLES (Wajib diisi)
+# ========================================
+
+# Database URL (Setelah setup Neon/Supabase)
+DATABASE_URL=postgresql://username:password@host:5432/database
+
+# JWT Secret (Generated)
+JWT_SECRET=10462a0661870dc9e41847820d786b558dab79531e19951477afa92904ced26d
+
+# NextAuth Secret (Generated)
+NEXTAUTH_SECRET=f5f62a8e5359df52b50a957aa0aa3997ad28d5cae64b357018daaf3581d2cb53
+
+# NextAuth URL (Update setelah deploy)
+NEXTAUTH_URL=https://your-backend.vercel.app
+
+# CORS Origin (Update sesuai domain frontend)
+CORS_ORIGIN=https://yourdomain.com
+
+# Node Environment
+NODE_ENV=production
+
+# ========================================
+# OPTIONAL VARIABLES (Opsional)
+# ========================================
+
+# WhatsApp API (Jika menggunakan WhatsApp)
+WHATSAPP_API_URL=https://your-whatsapp-api.com
+WHATSAPP_API_TOKEN=your-whatsapp-token
+
+# Redis URL (Jika menggunakan Redis)
+REDIS_URL=redis://username:password@host:6379
+
+# Port (Default Vercel)
+PORT=3000
+
+# ========================================
+# INSTRUCTIONS
+# ========================================
+
+# 1. Setup Database dulu:
+#    - Neon: https://neon.tech
+#    - Supabase: https://supabase.com
+#    - Railway: https://railway.app
+
+# 2. Update DATABASE_URL dengan connection string dari database
+
+# 3. Update NEXTAUTH_URL dengan URL backend Vercel:
+#    - Format: https://your-project-name.vercel.app
+
+# 4. Update CORS_ORIGIN dengan domain frontend:
+#    - Format: https://yourdomain.com
+#    - Atau: https://your-frontend.vercel.app
+
+# 5. Copy semua variables ke Vercel Dashboard
+
+# ========================================
+# TEST CREDENTIALS
+# ========================================
+
+# Email: admin@lagiah.com
+# Password: admin123
+
+# ========================================
+# SECURITY NOTES
+# ========================================
+
+# ✅ JWT_SECRET dan NEXTAUTH_SECRET sudah di-generate secara aman
+# ✅ Jangan share secrets ini ke publik
+# ✅ Gunakan secrets yang berbeda untuk production
+# ✅ Backup secrets ini di tempat yang aman 
