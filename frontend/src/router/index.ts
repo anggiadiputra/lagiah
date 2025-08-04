@@ -126,7 +126,6 @@ router.beforeEach(async (to, from, next) => {
         await authStore.initialize()
         // If still not authenticated after initialization, redirect to login
         if (!authStore.isAuthenticated) {
-          console.log('User not authenticated after initialization, redirecting to login')
           next({
             path: '/login',
             query: { redirect: to.fullPath }
@@ -136,7 +135,6 @@ router.beforeEach(async (to, from, next) => {
         }
       } catch (error) {
         // If initialization fails, redirect to login
-        console.log('Auth initialization failed, redirecting to login')
         localStorage.removeItem('auth_token') // Clear invalid token
         next({
           path: '/login',
@@ -145,7 +143,6 @@ router.beforeEach(async (to, from, next) => {
       }
     } else {
       // No token, redirect to login
-      console.log('No auth token found, redirecting to login')
       next({
         path: '/login',
         query: { redirect: to.fullPath }

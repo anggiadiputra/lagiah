@@ -35,22 +35,14 @@ api.interceptors.request.use(
   (config) => {
     // Add authentication token if available
     const token = localStorage.getItem('auth_token')
-    console.log('🌐 API Request:', config.method?.toUpperCase(), config.url)
-    console.log('🔑 Token present:', !!token)
-    console.log('📍 Base URL:', config.baseURL)
-    console.log('📋 Full URL:', `${config.baseURL}${config.url}`)
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
-      console.log('✅ Authorization header set')
-    } else {
-      console.log('❌ No token found')
     }
     
     return config
   },
   (error) => {
-    console.log('❌ Request interceptor error:', error)
     return Promise.reject(error)
   }
 )
@@ -66,14 +58,6 @@ api.interceptors.response.use(
     return response.data
   },
   async (error) => {
-    console.log('❌ API Error:', error.message)
-    console.log('📊 Error details:', {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      url: error.config?.url,
-      method: error.config?.method,
-      data: error.response?.data
-    })
     
     const originalRequest = error.config as any
     

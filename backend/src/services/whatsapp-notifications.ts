@@ -169,7 +169,7 @@ export class WhatsAppNotificationService {
           const phoneNumber = `+${settings.recipientPhoneNumber}`
           await this.sendWhatsAppMessage(phoneNumber, message)
           
-          console.log(`Domain expiry notification sent for ${domain.name} (${daysLeft} days left)`)
+    
         }
       }
     } catch (error) {
@@ -220,7 +220,7 @@ export class WhatsAppNotificationService {
           const phoneNumber = `+${settings.recipientPhoneNumber}`
           await this.sendWhatsAppMessage(phoneNumber, message)
           
-          console.log(`Hosting expiry notification sent for ${hosting.name} (${daysLeft} days left)`)
+    
         }
       }
     } catch (error) {
@@ -271,7 +271,7 @@ export class WhatsAppNotificationService {
           const phoneNumber = `+${settings.recipientPhoneNumber}`
           await this.sendWhatsAppMessage(phoneNumber, message)
           
-          console.log(`VPS expiry notification sent for ${vps.name} (${daysLeft} days left)`)
+    
         }
       }
     } catch (error) {
@@ -280,13 +280,13 @@ export class WhatsAppNotificationService {
   }
 
   async checkAllNotifications(): Promise<void> {
-    console.log('🔄 Starting WhatsApp notification checks...')
+
     
     await this.checkAndSendDomainNotifications()
     await this.checkAndSendHostingNotifications()
     await this.checkAndSendVPSNotifications()
     
-    console.log('✅ WhatsApp notification checks completed')
+
   }
 }
 

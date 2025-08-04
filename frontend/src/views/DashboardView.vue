@@ -498,7 +498,6 @@ onMounted(async () => {
         if (authStore.isAuthenticated && authStore.user && authStore.user.id !== 'unknown') {
           await dashboardStore.fetchDashboardData()
         } else {
-          console.log('User not properly authenticated, redirecting to login...')
           // Redirect to login if not authenticated
           router.push({
             path: '/login',

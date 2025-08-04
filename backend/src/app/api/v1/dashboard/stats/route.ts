@@ -85,7 +85,6 @@ async function getDashboardStats(req: NextRequest) {
           }
         })
       } catch (error) {
-        console.error('Error auto-updating expired status:', error)
         // Continue with stats calculation even if auto-update fails
       }
     }
@@ -241,7 +240,6 @@ async function getDashboardStats(req: NextRequest) {
     
     return successResponse(stats)
   } catch (error) {
-    console.error('Error fetching dashboard stats:', error)
     return errorResponse('Failed to fetch dashboard statistics', 'INTERNAL_ERROR', 500)
   }
 }

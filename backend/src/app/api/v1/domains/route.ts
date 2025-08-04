@@ -23,7 +23,7 @@ async function getDomains(req: NextRequest) {
     const registrarParam = url.searchParams.get('registrar')
     const search = url.searchParams.get('search')
     
-    console.log(`🔍 Fetching domains - Page: ${page}, Limit: ${limit}, Sort: ${sortParam}:${orderParam}`)
+
     
     // Parse sort parameter - handle both "field:order" format and separate parameters
     let sort = sortParam
@@ -77,7 +77,7 @@ async function getDomains(req: NextRequest) {
       }
     }
     
-    console.log(`🔍 Query filters:`, { status, registrar: registrarParam, search: search?.trim() })
+
     
     // Search and where clause
     
@@ -87,7 +87,7 @@ async function getDomains(req: NextRequest) {
     const countStartTime = Date.now()
     const total = await prisma.domain.count({ where })
     const countTime = Date.now() - countStartTime
-    console.log(`📊 Total domains: ${total} (count took ${countTime}ms)`)
+
     
     // Get domains with error handling and optimized query
     let domains: any[] = []
@@ -147,15 +147,8 @@ async function getDomains(req: NextRequest) {
         timeout: 25000 // 25 second timeout for the transaction
       })
     } catch (dbError) {
-      console.error('Database query error:', dbError)
-      console.error('Error details:', {
-        message: dbError instanceof Error ? dbError.message : 'Unknown error',
-        stack: dbError instanceof Error ? dbError.stack : undefined
-      })
-      
       // Check if it's a timeout error
       if (dbError instanceof Error && dbError.message.includes('timeout')) {
-        console.error('⏰ Database query timed out')
         return errorResponse(
           'Database query timed out. Please try again.',
           'TIMEOUT_ERROR',
@@ -165,12 +158,9 @@ async function getDomains(req: NextRequest) {
       
       // Return empty result instead of throwing
       domains = []
-      // Returning empty result due to database error
     }
     
-    // Domains fetched
-    const totalTime = Date.now() - startTime
-    console.log(`✅ Domains fetched successfully - ${domains.length} items in ${totalTime}ms`)
+
     
     return successResponse({
       items: domains,
@@ -182,14 +172,6 @@ async function getDomains(req: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Error fetching domains:', error)
-    
-    // Log more details for debugging
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      console.error('Prisma error code:', error.code)
-      console.error('Prisma error message:', error.message)
-    }
-    
     return errorResponse(
       'An error occurred while fetching domains',
       'INTERNAL_SERVER_ERROR',
@@ -235,33 +217,20 @@ async function createDomain(req: NextRequest) {
 
     // Determine domain status based on Whois data
     let domainStatus = 'ACTIVE';
-    console.log('[CreateDomain] Whois data check:', {
-      hasWhoisData: !!whoisData,
-      registrar: whoisData?.registrar,
-      status: whoisData?.status,
-      whoisStatus: whoisData?.whoisData?.Status,
-      whoisDataStatus: whoisData?.whoisData?.data?.Status
-    });
     
     if (!whoisData || !whoisData.registrar || whoisData.registrar === 'N/A') {
       // Domain doesn't have valid registrar info, likely available for order
       domainStatus = 'AVAILABLE_TO_ORDER';
-      console.log('[CreateDomain] Setting status to AVAILABLE_TO_ORDER (no registrar)');
     } else {
       // Check if domain status indicates it's available
       const statusString = String(whoisData.status || '').toLowerCase();
       const whoisStatus = String(whoisData.whoisData?.Status || '').toLowerCase();
       const whoisDataStatus = String(whoisData.whoisData?.data?.Status || '').toLowerCase();
       
-      console.log('[CreateDomain] Status checks:', { statusString, whoisStatus, whoisDataStatus });
-      
       if (statusString === 'available' || whoisStatus === 'available' || whoisDataStatus === 'available') {
         domainStatus = 'AVAILABLE_TO_ORDER';
-        console.log('[CreateDomain] Setting status to AVAILABLE_TO_ORDER (status indicates available)');
       }
     }
-    
-    console.log('[CreateDomain] Final domain status:', domainStatus);
 
     const dataToCreate: Prisma.DomainCreateInput = {
       name: name,
@@ -314,7 +283,6 @@ async function createDomain(req: NextRequest) {
       
       return successResponse({ ...newDomain, whoisIntegrated: !!whoisData }, 201);
     } catch (dbError: any) {
-      console.error('[CreateDomain] DATABASE ERROR:', dbError);
       return errorResponse(`Database Error: ${dbError.code || 'Unknown'}`, 'DATABASE_ERROR', 500, {
         message: dbError.message,
         meta: dbError.meta,

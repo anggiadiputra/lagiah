@@ -280,8 +280,7 @@ const formatDate = (dateString: string) => {
 
 // Fix the lookupWhois function with proper type checking
 const lookupWhois = async () => {
-  console.log('lookupWhois called with domain:', form.value.domain)
-  console.log('isValidDomain:', isValidDomain.value)
+  
   
   if (!isValidDomain.value) {
     error.value = 'Please enter a valid domain name'
@@ -295,7 +294,7 @@ const lookupWhois = async () => {
   try {
     const whoisResponse = await domainStore.fetchWhoisData(domain.trim().toLowerCase())
     
-    console.log('Whois response in modal:', whoisResponse)
+
     
     // Check if response is valid
     if (whoisResponse && typeof whoisResponse === 'object' && 'status' in whoisResponse && whoisResponse.status === 'success') {
@@ -319,7 +318,7 @@ const lookupWhois = async () => {
       if (errorMessage.includes('not found') || errorMessage.includes('available')) {
         error.value = null
         whoisData.value = null
-        console.log('Domain appears to be available (not registered)')
+  
       } else {
         error.value = errorMessage
       }
@@ -359,15 +358,14 @@ const handleSubmit = async () => {
       notes: form.value.notes || undefined,
     }
 
-    console.log('[AddDomainModal] Form values:', form.value);
-    console.log('[AddDomainModal] Submitting with data:', domainData)
+
     
     const response = await domainStore.createDomain(domainData)
-    console.log('[AddDomainModal] Store response:', response)
+
 
     // Handle response format from API
     if (response && response.status === 'success' && response.data) {
-      console.log('[AddDomainModal] Domain created successfully:', response.data)
+  
       emit('success', response.data)
       closeModal()
     } else {
@@ -412,7 +410,7 @@ const createDomainWithoutWhois = async () => {
         status: 'ACTIVE'
       }
       
-      console.log('Creating domain without Whois data:', domainData)
+
       
       // Validate domain data before sending to API
       if (!domainData.name) {
@@ -424,10 +422,10 @@ const createDomainWithoutWhois = async () => {
       
       // Send request to create domain
       const response = await domainStore.createDomain(domainData)
-      console.log('Create domain response:', response)
+
       
       if (response && response.status === 'success' && response.data) {
-        console.log('Domain created successfully without Whois data:', response.data)
+  
         emit('success', response.data)
         closeModal()
       } else {
