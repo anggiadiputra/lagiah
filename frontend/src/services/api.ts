@@ -50,8 +50,7 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response: AxiosResponse) => {
-    console.log('✅ API Response:', response.status, response.config.url)
-    console.log('📄 Response data:', response.data)
+
     
     // Return response.data instead of response object
     // This makes it easier for stores to handle the data

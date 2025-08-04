@@ -132,26 +132,15 @@ export const useDashboardStore = defineStore('dashboard', () => {
   // Fetch expiring hosting
   const fetchExpiringHosting = async (days: number = 30) => {
     try {
-      console.log('🏠 Fetching expiring hosting...')
       const response = await api.getExpiringHosting({ days })
-      
-      console.log('📄 Expiring hosting response:', response)
       
       if (response && response.status === 'success' && response.data) {
         expiringHosting.value = response.data?.items || response.data || []
-        console.log('✅ Expiring hosting fetched successfully')
       } else {
-        console.warn('⚠️ Unexpected response format:', response)
         expiringHosting.value = []
       }
     } catch (err: any) {
-      console.error('❌ Error fetching expiring hosting:', err)
-      console.error('📋 Error details:', {
-        message: err.message,
-        status: err.response?.status,
-        statusText: err.response?.statusText,
-        data: err.response?.data
-      })
+      console.error('Error fetching expiring hosting:', err)
       
       // Don't set error for 401 - let the auth system handle it
       if (err.response?.status !== 401) {

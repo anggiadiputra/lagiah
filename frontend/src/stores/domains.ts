@@ -369,7 +369,7 @@ export const useDomainStore = defineStore('domains', () => {
       return { status: 'error', message: error.value, error: err }
     } finally {
       loading.value = false
-      console.log(`[DomainStore] Finished refresh attempt for ID: ${id}`)
+  
     }
   }
 
@@ -382,7 +382,7 @@ export const useDomainStore = defineStore('domains', () => {
       filters.value.page = 1
     }
     
-    console.log('Filters updated:', filters.value)
+
   }
 
   function clearCurrentDomain() {

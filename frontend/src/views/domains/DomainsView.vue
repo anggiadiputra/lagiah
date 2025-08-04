@@ -1084,7 +1084,7 @@ const handleModalRefresh = async () => {
 const handleDomainDeleted = async (domainId: string) => {
   // Refresh the domains list after domain is deleted
   await fetchDomains()
-  console.log('Domain deleted successfully:', domainId)
+  
 }
 
 // Open Edit Domain modal
@@ -1103,7 +1103,7 @@ const closeEditModal = () => {
 const handleEditDomainSuccess = async () => {
   // Refresh the domains list to show the new domain
   await fetchDomains()
-  console.log('Domain edited successfully')
+  
   closeEditModal()
 }
 
@@ -1121,12 +1121,12 @@ const closeAddDomainModal = () => {
 const handleAddDomainSuccess = async (newDomain: Domain) => {
   // Refresh the domains list to show the new domain
   await fetchDomains()
-  console.log('Domain added successfully:', newDomain.name)
+  
 }
 
 // Show domain actions (placeholder for dropdown menu)
 const showDomainActions = (domain: Domain) => {
-  console.log('Show actions for domain:', domain.name)
+  
   // TODO: Implement dropdown menu or modal for domain actions
 }
 

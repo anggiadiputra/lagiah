@@ -465,9 +465,7 @@ const submitForm = () => {
   }
   
   // Log the filtered data being sent to API for debugging
-  console.log('Submitting hosting data:', JSON.stringify(filteredData, null, 2))
-  console.log('Is editing:', isEditing.value)
-  console.log('Current hosting ID:', props.hosting?.id)
+  
   
   emit('save', filteredData)
 }
