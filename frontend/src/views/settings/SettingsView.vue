@@ -750,8 +750,7 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { settingsService, type AppSettings as ApiAppSettings, type SecuritySettings as ApiSecuritySettings } from '@/services/settings'
-import { authService } from '@/services/auth'
-import { apiService } from '@/services/api'
+import authService from '@/services/auth'
 import { useTitle } from '@/composables/useTitle'
 
 // Types for frontend (camelCase)
@@ -1031,15 +1030,15 @@ const saveSecuritySettings = async () => {
 const updateProfile = async () => {
   isProfileLoading.value = true
   try {
-    const response = await apiService.put('/auth/profile', {
+    const response = await authService.updateProfile({
       name: userProfile.value.name,
       email: userProfile.value.email
     })
 
     // Profile update response received
     
-    if (response.data?.status === 'success') {
-      authStore.user = response.data.data
+    if (response.status === 'success') {
+      authStore.user = response.data.user
       alert('Profile updated successfully!')
     } else {
       alert('Failed to update profile. Please try again.')
@@ -1066,14 +1065,14 @@ const changePassword = async () => {
 
   isPasswordLoading.value = true
   try {
-    const response = await apiService.post('/auth/change-password', {
+    const response = await authService.changePassword({
       currentPassword: passwordForm.currentPassword,
       newPassword: passwordForm.newPassword
     })
 
     // Password change response received
     
-    if (response.data?.status === 'success') {
+    if (response.status === 'success') {
       passwordForm.currentPassword = ''
       passwordForm.newPassword = ''
       passwordForm.confirmPassword = ''

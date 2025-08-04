@@ -71,11 +71,14 @@ class UsersService {
       if (params?.search) queryParams.append('search', params.search)
       if (params?.role) queryParams.append('role', params.role)
       
-      const response = await apiService.get(`/users?${queryParams.toString()}`)
+      const response = await apiService.getUsers(params)
       
-      // Handle both response formats (direct data or nested in response.data)
-      const responseData = response.data ? response.data : response
-      return responseData.data
+      // Handle response format from API
+      if (response && response.status === 'success' && response.data) {
+        return response.data
+      } else {
+        throw new Error(response?.message || 'Failed to fetch users')
+      }
     } catch (error) {
       console.error('Error fetching users:', error)
       throw error
@@ -85,11 +88,14 @@ class UsersService {
   // Create new user
   async createUser(userData: CreateUserRequest): Promise<CreateUserResponse> {
     try {
-      const response = await apiService.post('/users', userData)
+      const response = await apiService.createUser(userData)
       
-      // Handle both response formats (direct data or nested in response.data)
-      const responseData = response.data ? response.data : response
-      return responseData.data
+      // Handle response format from API
+      if (response && response.status === 'success' && response.data) {
+        return response.data
+      } else {
+        throw new Error(response?.message || 'Failed to create user')
+      }
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to create user')
     }
@@ -98,11 +104,14 @@ class UsersService {
   // Update user
   async updateUser(userId: string, userData: UpdateUserRequest): Promise<CreateUserResponse> {
     try {
-      const response = await apiService.put(`/users/${userId}`, userData)
+      const response = await apiService.updateUser(userId, userData)
       
-      // Handle both response formats (direct data or nested in response.data)
-      const responseData = response.data ? response.data : response
-      return responseData.data
+      // Handle response format from API
+      if (response && response.status === 'success' && response.data) {
+        return response.data
+      } else {
+        throw new Error(response?.message || 'Failed to update user')
+      }
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to update user')
     }
@@ -111,11 +120,14 @@ class UsersService {
   // Delete user
   async deleteUser(userId: string): Promise<{ status: string; data: { message: string } }> {
     try {
-      const response = await apiService.delete(`/users/${userId}`)
+      const response = await apiService.deleteUser(userId)
       
-      // Handle both response formats (direct data or nested in response.data)
-      const responseData = response.data ? response.data : response
-      return responseData
+      // Handle response format from API
+      if (response && response.status === 'success' && response.data) {
+        return response
+      } else {
+        throw new Error(response?.message || 'Failed to delete user')
+      }
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to delete user')
     }
@@ -124,11 +136,14 @@ class UsersService {
   // Get user by ID
   async getUserById(userId: string): Promise<{ status: string; data: { user: User } }> {
     try {
-      const response = await apiService.get(`/users/${userId}`)
+      const response = await apiService.getUser(userId)
       
-      // Handle both response formats (direct data or nested in response.data)
-      const responseData = response.data ? response.data : response
-      return responseData.data
+      // Handle response format from API
+      if (response && response.status === 'success' && response.data) {
+        return response
+      } else {
+        throw new Error(response?.message || 'Failed to fetch user')
+      }
     } catch (error) {
       console.error('Error fetching user:', error)
       throw error

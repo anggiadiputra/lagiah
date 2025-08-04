@@ -251,7 +251,7 @@
                   <div class="flex-shrink-0 h-10 w-10">
                     <div class="h-10 w-10 rounded-lg bg-primary-100 flex items-center justify-center">
                       <svg class="h-5 w-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                       </svg>
                     </div>
                   </div>
@@ -429,7 +429,7 @@
               <td colspan="7" class="px-6 py-12 text-center">
                 <div class="space-y-3">
                   <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                   </svg>
                   <div>
                     <h3 class="text-sm font-medium text-gray-900">No domains found</h3>
@@ -465,7 +465,7 @@
                 <div class="flex-shrink-0 h-10 w-10">
                   <div class="h-10 w-10 rounded-lg bg-primary-100 flex items-center justify-center">
                     <svg class="h-5 w-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                   </div>
                 </div>
@@ -585,7 +585,7 @@
           <div v-if="filteredDomains.length === 0 && !domainsStore.loading" class="bg-white border border-gray-200 rounded-lg p-8 text-center">
             <div class="space-y-3">
               <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
               <div>
                 <h3 class="text-sm font-medium text-gray-900">No domains found</h3>
@@ -979,19 +979,27 @@ const displayedPages = computed(() => {
   return pages
 })
 
-// Fetch domains
+// Fetch domains with debouncing
 const fetchDomains = async () => {
-  try {
-    await domainsStore.fetchDomains({
-      page: domainsStore.pagination.page,
-      limit: domainsStore.pagination.limit,
-      search: search.value,
-      status: statusFilter.value,
-      registrar: registrarFilter.value
-    })
-  } catch (error) {
-    // Handle error
+  // Clear any existing timer
+  if (debounceTimer.value) {
+    clearTimeout(debounceTimer.value)
   }
+  
+  // Set a new timer
+  debounceTimer.value = setTimeout(async () => {
+    try {
+      await domainsStore.fetchDomains({
+        page: domainsStore.pagination.page,
+        limit: domainsStore.pagination.limit,
+        search: search.value,
+        status: statusFilter.value,
+        registrar: registrarFilter.value
+      })
+    } catch (error) {
+      // Handle error
+    }
+  }, 300) // 300ms debounce
 }
 
 // Watch for search changes
@@ -999,7 +1007,10 @@ watch(search, (newValue) => {
   if (newValue.trim()) {
     handleSearch()
   } else {
-    fetchDomains()
+    // Only fetch if we're not already loading
+    if (!domainsStore.loading) {
+      fetchDomains()
+    }
   }
 })
 
@@ -1010,7 +1021,10 @@ watch([statusFilter, registrarFilter], () => {
 
 // Initialize search on mount
 onMounted(() => {
-  fetchDomains()
+  // Only fetch if not already loaded
+  if (domainsStore.domains.length === 0) {
+    fetchDomains()
+  }
 })
 
 // Pagination methods

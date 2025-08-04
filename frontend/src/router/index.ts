@@ -101,16 +101,56 @@ router.beforeEach(async (to, from, next) => {
   const requiresAdmin = to.matched.some(record => record.meta.requiresAdmin)
   const allowedRoles = to.matched.find(record => record.meta.allowedRoles)?.meta.allowedRoles
   
-  // Get auth store (we can't use it at the top level because it might not be initialized yet)
+  // Get auth store
   const authStore = useAuthStore()
+  
+  // Initialize auth store if needed
+  if (!authStore.user && localStorage.getItem('auth_token')) {
+    try {
+      await authStore.initialize()
+    } catch (error) {
+      console.warn('Failed to initialize auth store:', error)
+      // Clear invalid token
+      localStorage.removeItem('auth_token')
+    }
+  }
+  
+  // Check if user has a token (even if not fully authenticated)
+  const hasToken = localStorage.getItem('auth_token')
   
   // If route requires auth and user is not authenticated
   if (requiresAuth && !authStore.isAuthenticated) {
-    // Redirect to login with return URL
-    next({
-      path: '/login',
-      query: { redirect: to.fullPath }
-    })
+    // If user has token but not authenticated, try to initialize
+    if (hasToken) {
+      try {
+        await authStore.initialize()
+        // If still not authenticated after initialization, redirect to login
+        if (!authStore.isAuthenticated) {
+          console.log('User not authenticated after initialization, redirecting to login')
+          next({
+            path: '/login',
+            query: { redirect: to.fullPath }
+          })
+        } else {
+          next()
+        }
+      } catch (error) {
+        // If initialization fails, redirect to login
+        console.log('Auth initialization failed, redirecting to login')
+        localStorage.removeItem('auth_token') // Clear invalid token
+        next({
+          path: '/login',
+          query: { redirect: to.fullPath }
+        })
+      }
+    } else {
+      // No token, redirect to login
+      console.log('No auth token found, redirecting to login')
+      next({
+        path: '/login',
+        query: { redirect: to.fullPath }
+      })
+    }
   } 
   // If route requires admin and user is not admin
   else if (requiresAdmin && !authStore.isAdmin) {

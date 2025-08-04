@@ -1,4 +1,4 @@
-import apiService from './api'
+import { apiService } from './api'
 
 export interface AppSettings {
   app_name: string
@@ -62,8 +62,7 @@ class SettingsService {
   // Get all settings
   async getSettings(category?: string): Promise<SettingsData> {
     try {
-      const params = category ? `?category=${category}` : ''
-      const response = await apiService.get(`/settings${params}`)
+      const response = await apiService.getSettings(category)
       
       // Handle response structure from API interceptor
       const responseData = response.data ? response.data : response
@@ -114,7 +113,7 @@ class SettingsService {
   // Update settings
   async updateSettings(settings: UpdateSettingsRequest['settings']): Promise<UpdateSettingsResponse> {
     try {
-      const response = await apiService.put('/settings', { settings })
+      const response = await apiService.updateSettings({ settings })
       return response.data
     } catch (error) {
       throw error

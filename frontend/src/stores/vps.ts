@@ -34,14 +34,12 @@ export const useVPSStore = defineStore('vps', () => {
     try {
       const response = await api.getVPSList(params)
       
-      // Handle both response formats (direct data or nested in response.data)
-      const responseData = response.data ? response.data : response
-      
-      if (responseData && responseData.status === 'success') {
-        vpsList.value = responseData.data?.items || []
-        return responseData
+      // Handle response format from API
+      if (response && response.status === 'success' && response.data) {
+        vpsList.value = response.data?.items || []
+        return response
       } else {
-        throw new Error(responseData?.message || 'Failed to fetch VPS accounts.')
+        throw new Error(response?.message || 'Failed to fetch VPS accounts.')
       }
     } catch (err: any) {
       error.value = err.message || 'An error occurred while fetching VPS accounts.'
@@ -59,14 +57,12 @@ export const useVPSStore = defineStore('vps', () => {
     try {
       const response = await api.getVPSById(id)
       
-      // Handle both response formats (direct data or nested in response.data)
-      const responseData = response.data ? response.data : response
-      
-      if (responseData && responseData.status === 'success') {
-        selectedVPS.value = responseData.data
-        return responseData
+      // Handle response format from API
+      if (response && response.status === 'success' && response.data) {
+        selectedVPS.value = response.data
+        return response
       } else {
-        throw new Error(responseData?.message || 'Failed to fetch VPS details.')
+        throw new Error(response?.message || 'Failed to fetch VPS details.')
       }
     } catch (err: any) {
       error.value = err.message || 'An error occurred while fetching VPS details.'
@@ -104,17 +100,15 @@ export const useVPSStore = defineStore('vps', () => {
       
       const response = await api.createVPS(cleanData)
       
-      // Handle both response formats (direct data or nested in response.data)
-      const responseData = response.data ? response.data : response
-      
-      if (responseData && responseData.status === 'success') {
+      // Handle response format from API
+      if (response && response.status === 'success' && response.data) {
         await fetchVPSList() // Refresh the list
-        return responseData
+        return response
       } else {
         // Handle error response
-        const errorMessage = responseData?.error?.message || 
-                            (responseData?.error?.issues && responseData.error.issues.length > 0 
-                              ? responseData.error.issues.map((i: any) => i.message).join(', ') 
+        const errorMessage = response?.error?.message || 
+                            (response?.error?.issues && response.error.issues.length > 0 
+                              ? response.error.issues.map((i: any) => i.message).join(', ') 
                               : 'Failed to create VPS.');
         
         error.value = errorMessage;
@@ -152,14 +146,12 @@ export const useVPSStore = defineStore('vps', () => {
       
       const response = await api.updateVPS(id, cleanData)
       
-      // Handle both response formats (direct data or nested in response.data)
-      const responseData = response.data ? response.data : response
-      
-      if (responseData && responseData.status === 'success') {
+      // Handle response format from API
+      if (response && response.status === 'success' && response.data) {
         await fetchVPSList() // Refresh the list
-        return responseData
+        return response
       } else {
-        throw new Error(responseData?.message || 'Failed to update VPS.')
+        throw new Error(response?.message || 'Failed to update VPS.')
       }
     } catch (err: any) {
       error.value = err.message || 'An error occurred during update.'

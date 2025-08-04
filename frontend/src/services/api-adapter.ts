@@ -93,43 +93,39 @@ const getDomain = (id: string) => api.getDomain(id)
 const createDomain = (data: any) => api.createDomain(data)
 const updateDomain = (id: string, data: any) => api.updateDomain(id, data)
 const deleteDomain = (id: string) => api.deleteDomain(id)
-const refreshWhois = (id: string) => api.refreshWhois(id) // Define as standalone const
+const refreshWhois = (id: string) => api.refreshWhois(id)
 const lookupWhois = (domain: string) => api.lookupWhois(domain)
 
-const getHostingAccounts = (params?: any) => api.getHostingAccounts(params)
-
-const login = (credentials: { email: string, password: string }) => api.login(credentials)
-const getProfile = () => api.getProfile()
-
+const getHostingAccounts = (params?: any) => api.getHostings(params)
 const getHostings = (params?: any) => api.getHostings(params)
-const getHostingById = (id: string) => api.getHostingById(id)
+const getHostingById = (id: string) => api.getHosting(id)
 const createHosting = (data: any) => api.createHosting(data)
 const updateHosting = (id: string, data: any) => api.updateHosting(id, data)
 const deleteHosting = (id: string) => api.deleteHosting(id)
 const getHostingPassword = (id: string) => api.getHostingPassword(id)
 
-// VPS functions
-const getVPSList = (params?: any) => api.getVPSList(params)
+const getVPSList = (params?: any) => api.getVPS(params)
 const getVPSById = (id: string) => api.getVPSById(id)
 const createVPS = (data: any) => api.createVPS(data)
 const updateVPS = (id: string, data: any) => api.updateVPS(id, data)
 const deleteVPS = (id: string) => api.deleteVPS(id)
-const getVpsPassword = (id: string) => api.getVpsPassword(id)
+const getVpsPassword = (id: string) => api.getVPSPassword(id)
 
-// Website functions
 const getWebsites = (params?: any) => api.getWebsites(params)
-const getWebsiteById = (id: string) => api.getWebsiteById(id)
+const getWebsiteById = (id: string) => api.getWebsite(id)
 const createWebsite = (data: any) => api.createWebsite(data)
 const updateWebsite = (id: string, data: any) => api.updateWebsite(id, data)
 const deleteWebsite = (id: string) => api.deleteWebsite(id)
 const getWebsitePassword = (id: string) => api.getWebsitePassword(id)
 
-// Dashboard functions
 const getDashboardStats = () => api.getDashboardStats()
 const getRecentActivity = (params?: any) => api.getRecentActivity(params)
 const getExpiringDomains = (params?: any) => api.getExpiringDomains(params)
 const getExpiringHosting = (params?: any) => api.getExpiringHosting(params)
 const getExpiringVPS = (params?: any) => api.getExpiringVPS(params)
+
+const login = (credentials: { email: string, password: string }) => api.login(credentials)
+const getProfile = () => api.getProfile()
 
 // Export default object
 export default {

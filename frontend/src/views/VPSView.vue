@@ -270,7 +270,7 @@
                   <div class="flex items-center space-x-2 status-indicators">
                     <!-- Status Badge -->
                     <div class="relative group">
-                      <span :class="getComprehensiveStatusClass(vps.status, vps.expiresAt)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge">
+                      <span :class="getComprehensiveStatusClass(vps.status, vps.expiresAt, 7, true, false)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium status-badge">
                         <svg :class="getStatusIconClass(vps.status, vps.expiresAt)" class="mr-1.5 h-2 w-2 status-icon" viewBox="0 0 8 8">
                           <circle cx="4" cy="4" r="3"/>
                         </svg>
@@ -332,7 +332,7 @@
                   <div class="space-y-1">
                     <div class="font-medium">{{ formatDate(vps.expiresAt) }}</div>
                     <div v-if="vps.expiresAt" class="text-xs text-gray-500">
-                      {{ getExpirationMessage(vps.expiresAt) }}
+                      {{ getExpirationMessage(vps.expiresAt, 7, true, false) }}
                     </div>
                   </div>
                 </td>
@@ -387,8 +387,8 @@
                   </div>
                 </div>
                 <div class="flex items-center space-x-2">
-                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" :class="getComprehensiveStatusClass(vps.status, vps.expiresAt)">
-                    {{ getExpirationMessage(vps.expiresAt) }}
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" :class="getComprehensiveStatusClass(vps.status, vps.expiresAt, 7, true, false)">
+                    {{ getExpirationMessage(vps.expiresAt, 7, true, false) }}
                   </span>
                 </div>
               </div>

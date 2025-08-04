@@ -17,16 +17,14 @@ export const useWebsiteStore = defineStore('website', () => {
       const response = await api.getWebsites(params)
               // Raw API response received
       
-      // Handle both response formats (direct data or nested in response.data)
-      const responseData = response.data ? response.data : response
-      
-      if (responseData && responseData.status === 'success') {
+      // Handle response format from API
+      if (response && response.status === 'success' && response.data) {
         // Setting websites data
-        websites.value = responseData.data?.items || []
+        websites.value = response.data?.items || []
         // Websites loaded successfully
-        return responseData
+        return response
       } else {
-        throw new Error(responseData?.message || 'Failed to fetch websites.')
+        throw new Error(response?.message || 'Failed to fetch websites.')
       }
     } catch (err: any) {
       error.value = err.message || 'An error occurred while fetching websites.'
@@ -44,14 +42,12 @@ export const useWebsiteStore = defineStore('website', () => {
     try {
       const response = await api.getWebsiteById(id)
       
-      // Handle both response formats (direct data or nested in response.data)
-      const responseData = response.data ? response.data : response
-      
-      if (responseData && responseData.status === 'success') {
-        selectedWebsite.value = responseData.data
-        return responseData
+      // Handle response format from API
+      if (response && response.status === 'success' && response.data) {
+        selectedWebsite.value = response.data
+        return response
       } else {
-        throw new Error(responseData?.message || 'Failed to fetch website details.')
+        throw new Error(response?.message || 'Failed to fetch website details.')
       }
     } catch (err: any) {
       error.value = err.message || 'An error occurred while fetching website details.'
@@ -90,17 +86,15 @@ export const useWebsiteStore = defineStore('website', () => {
       
       const response = await api.createWebsite(cleanData)
       
-      // Handle both response formats (direct data or nested in response.data)
-      const responseData = response.data ? response.data : response
-      
-      if (responseData && responseData.status === 'success') {
+      // Handle response format from API
+      if (response && response.status === 'success' && response.data) {
         await fetchWebsites() // Refresh the list
-        return responseData
+        return response
       } else {
         // Handle error response
-        const errorMessage = responseData?.error?.message || 
-                            (responseData?.error?.issues && responseData.error.issues.length > 0 
-                              ? responseData.error.issues.map((i: any) => i.message).join(', ') 
+        const errorMessage = response?.error?.message || 
+                            (response?.error?.issues && response.error.issues.length > 0 
+                              ? response.error.issues.map((i: any) => i.message).join(', ') 
                               : 'Failed to create website.');
         
         error.value = errorMessage;
@@ -138,14 +132,12 @@ export const useWebsiteStore = defineStore('website', () => {
       
       const response = await api.updateWebsite(id, cleanData)
       
-      // Handle both response formats (direct data or nested in response.data)
-      const responseData = response.data ? response.data : response
-      
-      if (responseData && responseData.status === 'success') {
+      // Handle response format from API
+      if (response && response.status === 'success' && response.data) {
         await fetchWebsites() // Refresh the list
-        return responseData
+        return response
       } else {
-        throw new Error(responseData?.message || 'Failed to update website.')
+        throw new Error(response?.message || 'Failed to update website.')
       }
     } catch (err: any) {
       error.value = err.message || 'An error occurred during update.'
@@ -163,14 +155,12 @@ export const useWebsiteStore = defineStore('website', () => {
     try {
       const response = await api.deleteWebsite(id)
       
-      // Handle both response formats (direct data or nested in response.data)
-      const responseData = response.data ? response.data : response
-      
-      if (responseData && responseData.status === 'success') {
+      // Handle response format from API
+      if (response && response.status === 'success' && response.data) {
         await fetchWebsites() // Refresh the list
-        return responseData
+        return response
       } else {
-        throw new Error(responseData?.message || 'Failed to delete website.')
+        throw new Error(response?.message || 'Failed to delete website.')
       }
     } catch (err: any) {
       error.value = err.message || 'An error occurred during deletion.'

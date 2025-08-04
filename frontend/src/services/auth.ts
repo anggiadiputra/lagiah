@@ -54,7 +54,7 @@ class AuthService {
   // Update user profile
   async updateProfile(profileData: UserProfile): Promise<ProfileUpdateResponse> {
     try {
-      const response = await apiService.put('/auth/profile', profileData)
+      const response = await apiService.updateProfile(profileData)
       return response.data
     } catch (error) {
       console.error('Error updating profile:', error)
@@ -65,7 +65,7 @@ class AuthService {
   // Change user password
   async changePassword(passwordData: PasswordChange): Promise<PasswordChangeResponse> {
     try {
-      const response = await apiService.put('/auth/change-password', passwordData)
+      const response = await apiService.changePassword(passwordData)
       return response.data
     } catch (error) {
       console.error('Error changing password:', error)

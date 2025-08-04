@@ -18,17 +18,15 @@ export const useHostingStore = defineStore('hosting', () => {
       const response = await api.getHostings(params)
               // Raw API response received
       
-      // Handle both response formats (direct data or nested in response.data)
-      const responseData = response.data ? response.data : response
-      
-      if (responseData && responseData.status === 'success') {
+      // Handle response format from API
+      if (response && response.status === 'success' && response.data) {
         // Setting hostings data
-        hostings.value = responseData.data?.items || []
-        pagination.value = responseData.data?.pagination || null
+        hostings.value = response.data?.items || []
+        pagination.value = response.data?.pagination || null
         // Hostings loaded successfully
       } else {
         // Response not successful
-        throw new Error(responseData?.message || 'Failed to fetch hostings.')
+        throw new Error(response?.message || 'Failed to fetch hostings.')
       }
     } catch (err: any) {
       error.value = err.message || 'An unexpected error occurred.'
@@ -62,14 +60,12 @@ export const useHostingStore = defineStore('hosting', () => {
     try {
       const response = await api.getHostingById(id)
       
-      // ✅ IMPROVED: API service now returns response.data directly
-      const responseData = response
-      
-      if (responseData && responseData.status === 'success') {
-        currentHosting.value = responseData.data
-        return responseData.data
+      // Handle response format from API
+      if (response && response.status === 'success' && response.data) {
+        currentHosting.value = response.data
+        return response.data
       } else {
-        throw new Error(responseData?.message || `Failed to fetch hosting ${id}.`)
+        throw new Error(response?.message || `Failed to fetch hosting ${id}.`)
       }
     } catch (err: any) {
       error.value = err.message || 'An unexpected error occurred.'
@@ -110,17 +106,15 @@ export const useHostingStore = defineStore('hosting', () => {
       
       const response = await api.createHosting(cleanData)
       
-      // Handle both response formats (direct data or nested in response.data)
-      const responseData = response.data ? response.data : response
-      
-      if (responseData && responseData.status === 'success') {
+      // Handle response format from API
+      if (response && response.status === 'success' && response.data) {
         await fetchHostings() // Refresh the list
-        return responseData
+        return response
       } else {
         // Handle error response
-        const errorMessage = responseData?.error?.message || 
-                            (responseData?.error?.issues && responseData.error.issues.length > 0 
-                              ? responseData.error.issues.map((i: any) => i.message).join(', ') 
+        const errorMessage = response?.error?.message || 
+                            (response?.error?.issues && response.error.issues.length > 0 
+                              ? response.error.issues.map((i: any) => i.message).join(', ') 
                               : 'Failed to create hosting.');
         
         error.value = errorMessage;

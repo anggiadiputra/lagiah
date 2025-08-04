@@ -59,7 +59,7 @@
               ]"
               xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
             >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <svg
               v-else-if="item.icon === 'ServerIcon'"
@@ -95,7 +95,7 @@
               ]"
               xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
             >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <svg
               v-else-if="item.icon === 'UsersIcon'"
@@ -137,6 +137,9 @@
             {{ item.name }}
           </router-link>
         </nav>
+        
+        <!-- Recent Activity Section -->
+        <!-- Dihapus seluruh blok Recent Activity Section di sidebar -->
         
         <!-- User Profile Section -->
         <div class="border-t border-gray-200 p-4">
@@ -308,9 +311,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps, withDefaults, computed } from 'vue'
+import { ref, defineProps, withDefaults, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useDashboardStore } from '@/stores/dashboard'
 
 interface Props {
   title?: string
@@ -320,8 +324,26 @@ const props = withDefaults(defineProps<Props>(), {
   title: '',
 })
 
-// Use auth store
+// Use stores
 const authStore = useAuthStore()
+const dashboardStore = useDashboardStore()
+
+// Format time ago helper function
+const formatTimeAgo = (dateString: string) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+  
+  if (diffInSeconds < 60) return 'just now'
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
+  if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)}d ago`
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+// Recent activity computed property
+const recentActivity = computed(() => dashboardStore.recentActivity || [])
 
 // Navigation items with icons
 const navigation = computed(() => {
@@ -412,6 +434,17 @@ const logout = async () => {
     // Handle logout error
   }
 }
+
+// Load dashboard data on mount if authenticated
+onMounted(async () => {
+  if (authStore.isAuthenticated && authStore.user && authStore.user.id !== 'unknown') {
+    try {
+      await dashboardStore.fetchDashboardData()
+    } catch (error) {
+      console.warn('Failed to load dashboard data in layout:', error)
+    }
+  }
+})
 
 // Expose methods to parent components
 defineExpose({

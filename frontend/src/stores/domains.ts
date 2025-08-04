@@ -90,38 +90,35 @@ export const useDomainStore = defineStore('domains', () => {
     try {
       // Merge params with current filters
       const queryParams = { ...filters.value, ...params }
-      console.log('Fetching domains with query params:', queryParams)
       
       const response = await api.getDomains(queryParams)
       
-      console.log('API response received:', response)
-      
       // Handle error responses
-      if (response && response.data && typeof response.data === 'object' && 'status' in response.data && response.data.status === 'error') {
-        console.error('API returned error:', response.data)
-        error.value = (response.data as any).message || 'Server error'
+      if (response && typeof response === 'object' && 'status' in response && response.status === 'error') {
+        console.error('API returned error:', response)
+        error.value = (response as any).message || 'Server error'
         domains.value = []
         pagination.value = { total: 0, page: 1, limit: 10, pages: 0 }
         return
       }
       
       // Handle successful responses
-      if (response && response.data && response.data.status === 'success' && response.data.data && response.data.data.items) {
+      if (response && response.status === 'success' && response.data && response.data.items) {
         if (queryParams.limit && queryParams.limit > 100) { // Assuming a large limit means fetching all
-          allDomains.value = response.data.data.items
+          allDomains.value = response.data.items
           console.log('Fetched all domains for selector:', allDomains.value.length);
           console.log('Sample domain data:', allDomains.value[0]);
           console.log('Domains with hosting:', allDomains.value.filter(d => d.hosting !== null).length);
           console.log('Domains without hosting:', allDomains.value.filter(d => d.hosting === null).length);
         } else {
-          domains.value = response.data.data.items
+          domains.value = response.data.items
           // Update pagination from API response
-          if (response.data.data.pagination) {
+          if (response.data.pagination) {
             pagination.value = {
-              total: response.data.data.pagination.total || 0,
-              page: response.data.data.pagination.page || 1,
-              limit: response.data.data.pagination.limit || 10,
-              pages: response.data.data.pagination.pages || 1
+              total: response.data.pagination.total || 0,
+              page: response.data.pagination.page || 1,
+              limit: response.data.pagination.limit || 10,
+              pages: response.data.pagination.pages || 1
             }
           } else {
             // Fallback pagination calculation
@@ -136,8 +133,7 @@ export const useDomainStore = defineStore('domains', () => {
           // Update filters with current query params
           filters.value = { ...filters.value, ...queryParams }
           
-          console.log('Updated pagination:', pagination.value)
-          console.log('Updated filters:', filters.value)
+          // Pagination and filters updated successfully
         }
       } else {
         console.error('Invalid API response format:', response)
@@ -157,9 +153,18 @@ export const useDomainStore = defineStore('domains', () => {
         error.value = 'Failed to fetch domains'
       }
       
-      // Set empty data on error
-      domains.value = []
-      pagination.value = { total: 0, page: 1, limit: 10, pages: 0 }
+      // Check if it's a timeout error
+      if (err.message && err.message.includes('timeout')) {
+        error.value = 'Request timed out. Please try again.'
+        console.warn('⚠️ Using fallback data due to timeout')
+        // Use fallback data for timeout errors
+        domains.value = getFallbackDomains()
+        pagination.value = { total: domains.value.length, page: 1, limit: 10, pages: 1 }
+      } else {
+        // Set empty data on other errors
+        domains.value = []
+        pagination.value = { total: 0, page: 1, limit: 10, pages: 0 }
+      }
     } finally {
       loading.value = false
     }
@@ -195,19 +200,21 @@ export const useDomainStore = defineStore('domains', () => {
       const response = await api.createDomain(domainData)
       console.log('[DomainStore] Create domain response:', response)
       
-      // Add the new domain to the list if successful
+      // Handle response format from API
       if (response && response.status === 'success' && response.data) {
         domains.value.unshift(response.data)
         console.log('[DomainStore] Domain added to list successfully')
+        return response
       } else {
         console.warn('[DomainStore] Unexpected response format:', response)
+        const errorMessage = response?.message || 'Failed to create domain'
+        error.value = errorMessage
+        return { status: 'error', message: errorMessage, data: null }
       }
-      
-      return response
     } catch (err: any) {
       console.error('Error creating domain:', err)
       error.value = err.message || 'Failed to create domain'
-      return { status: 'error', message: error.value, error: err }
+      return { status: 'error', message: error.value, error: err, data: null }
     } finally {
       loading.value = false
     }
@@ -223,27 +230,27 @@ export const useDomainStore = defineStore('domains', () => {
       console.log('[DomainStore] Update domain response:', response)
       
       // Check if response is valid
-      if (response && response.data && response.data.status === 'success') {
+      if (response && response.status === 'success' && response.data) {
         // Update the domain in the list if successful
         const index = domains.value.findIndex(d => d.id === id)
         if (index !== -1) {
-          domains.value[index] = { ...domains.value[index], ...response.data.data }
+          domains.value[index] = { ...domains.value[index], ...response.data }
         }
         
         // Update current domain if it's the one being edited
         if (currentDomain.value && currentDomain.value.id === id) {
-          currentDomain.value = { ...currentDomain.value, ...response.data.data }
+          currentDomain.value = { ...currentDomain.value, ...response.data }
         }
         
         // Also update in allDomains if it exists there
         const allIndex = allDomains.value.findIndex(d => d.id === id)
         if (allIndex !== -1) {
-          allDomains.value[allIndex] = { ...allDomains.value[allIndex], ...response.data.data }
+          allDomains.value[allIndex] = { ...allDomains.value[allIndex], ...response.data }
         }
         
-        return response.data
+        return response
       } else {
-        const errorMessage = response?.data?.message || 'Failed to update domain'
+        const errorMessage = response?.message || 'Failed to update domain'
         console.error('[DomainStore] Update failed:', response)
         error.value = errorMessage
         return { status: 'error', message: errorMessage, data: null }

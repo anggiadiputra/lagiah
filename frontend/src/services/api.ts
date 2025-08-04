@@ -7,7 +7,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3004
 // Create axios instance
 const api: AxiosInstance = axios.create({
   baseURL: `${API_BASE_URL}/api/v1`,
-  timeout: 10000,
+  timeout: 30000, // Increased timeout to 30 seconds
   headers: {
     'Content-Type': 'application/json',
   },
@@ -35,14 +35,22 @@ api.interceptors.request.use(
   (config) => {
     // Add authentication token if available
     const token = localStorage.getItem('auth_token')
+    console.log('🌐 API Request:', config.method?.toUpperCase(), config.url)
+    console.log('🔑 Token present:', !!token)
+    console.log('📍 Base URL:', config.baseURL)
+    console.log('📋 Full URL:', `${config.baseURL}${config.url}`)
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+      console.log('✅ Authorization header set')
+    } else {
+      console.log('❌ No token found')
     }
     
     return config
   },
   (error) => {
+    console.log('❌ Request interceptor error:', error)
     return Promise.reject(error)
   }
 )
@@ -50,25 +58,46 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response: AxiosResponse) => {
-    return response
+    console.log('✅ API Response:', response.status, response.config.url)
+    console.log('📄 Response data:', response.data)
+    
+    // Return response.data instead of response object
+    // This makes it easier for stores to handle the data
+    return response.data
   },
   async (error) => {
+    console.log('❌ API Error:', error.message)
+    console.log('📊 Error details:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      url: error.config?.url,
+      method: error.config?.method,
+      data: error.response?.data
+    })
+    
     const originalRequest = error.config as any
     
-    // Handle 401 Unauthorized - try to refresh token
+    // Handle 401 Unauthorized - be more conservative
     if (axios.isAxiosError(error) && error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
       
-      try {
-        // Clear invalid token
-        localStorage.removeItem('auth_token')
-        
-        // Redirect to login
-        window.location.href = '/login?expired=true'
+      // Check if we have a token
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        // No token, but don't redirect immediately
+        // Let the component handle this
         return Promise.reject(error)
-      } catch (refreshError) {
-        return Promise.reject(refreshError)
       }
+      
+      // For now, just reject the error without clearing token
+      // Let the auth store handle token validation
+      return Promise.reject(error)
+    }
+    
+    // For other errors, return the error response data if available
+    if (axios.isAxiosError(error) && error.response?.data) {
+      // Return the error response data directly
+      return Promise.reject(error.response.data)
     }
     
     return Promise.reject(error)
@@ -84,6 +113,14 @@ export const apiService = {
 
   getProfile: async () => {
     return await retryRequest(() => api.get('/auth/me'))
+  },
+
+  updateProfile: async (data: any) => {
+    return await retryRequest(() => api.put('/auth/profile', data))
+  },
+
+  changePassword: async (data: any) => {
+    return await retryRequest(() => api.put('/auth/change-password', data))
   },
 
   // Domains
@@ -112,7 +149,7 @@ export const apiService = {
   },
 
   lookupWhois: async (domain: string) => {
-    return await retryRequest(() => api.get(`/domains/whois?domain=${encodeURIComponent(domain)}`))
+    return await retryRequest(() => api.post('/domains/whois', { domain }))
   },
 
   // Hosting
@@ -142,6 +179,10 @@ export const apiService = {
 
   // VPS
   getVPS: async (params?: any) => {
+    return await retryRequest(() => api.get('/vps', { params }))
+  },
+
+  getVPSList: async (params?: any) => {
     return await retryRequest(() => api.get('/vps', { params }))
   },
 
@@ -247,4 +288,4 @@ export const apiService = {
   },
 }
 
-export default api 
+export default api

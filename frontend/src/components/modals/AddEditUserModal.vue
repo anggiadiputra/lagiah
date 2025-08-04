@@ -186,14 +186,16 @@ const populateForm = (user: any) => {
       name: user.name || '',
       email: user.email || '',
       role: user.role || 'VIEWER',
-      isActive: user.isActive !== undefined ? user.isActive : true
+      password: '',
+      confirmPassword: ''
     }
   } else {
     form.value = {
       name: '',
       email: '',
       role: 'VIEWER',
-      isActive: true
+      password: '',
+      confirmPassword: ''
     }
   }
 }
@@ -206,27 +208,28 @@ const handleSubmit = async () => {
   error.value = null
   
   try {
-    const userData = {
-      name: form.value.name,
-      email: form.value.email,
-      role: form.value.role,
-      isActive: form.value.isActive
-    }
-    
     let response
     
     if (isEditing.value) {
+      const userData = {
+        name: form.value.name,
+        email: form.value.email,
+        role: form.value.role as 'ADMIN' | 'STAFF' | 'FINANCE' | 'VIEWER'
+      }
       response = await usersService.updateUser(props.user!.id, userData)
     } else {
+      const userData = {
+        name: form.value.name,
+        email: form.value.email,
+        role: form.value.role as 'ADMIN' | 'STAFF' | 'FINANCE' | 'VIEWER',
+        password: form.value.password
+      }
       response = await usersService.createUser(userData)
     }
     
-    if (response.status === 'success') {
-      emit('userUpdated', response.data)
-      closeModal()
-    } else {
-      error.value = response.message || 'Failed to save user'
-    }
+    // Response is already the data we need
+    emit('userUpdated', response.user)
+    emit('close')
   } catch (err: any) {
     error.value = err.message || 'An error occurred while saving the user'
   } finally {
@@ -234,8 +237,14 @@ const handleSubmit = async () => {
   }
 }
 
+// Methods
+const closeModal = () => {
+  emit('close')
+  resetForm()
+}
+
 // Watchers
-watch(isOpen, (newValue) => {
+watch(() => props.isOpen, (newValue) => {
   if (newValue) {
     populateForm(props.user)
   }
@@ -243,7 +252,7 @@ watch(isOpen, (newValue) => {
 
 // Watch for user prop changes
 watch(() => props.user, (newUser) => {
-  if (isOpen.value) {
+  if (props.isOpen) {
     populateForm(newUser)
   }
 })

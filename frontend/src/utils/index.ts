@@ -71,25 +71,69 @@ export function calculateVPSExpirationStatus(expiresAt: string | null | undefine
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
   if (diffDays < 0) {
-    // Expired
+    // Expired - Merah
     return {
       status: 'EXPIRED',
       daysUntilExpiry: Math.abs(diffDays),
       cssClass: 'bg-red-100 text-red-800'
     }
   } else if (diffDays <= warningDays) {
-    // Expiring soon (within warning days)
+    // Expiring soon (within 7 days) - Kuning
     return {
       status: 'EXPIRING_SOON',
       daysUntilExpiry: diffDays,
       cssClass: 'bg-yellow-100 text-yellow-800'
     }
   } else {
-    // Active
+    // Active (more than 7 days) - Biru
     return {
       status: 'ACTIVE',
       daysUntilExpiry: diffDays,
-      cssClass: 'bg-green-100 text-green-800'
+      cssClass: 'bg-blue-100 text-blue-800'
+    }
+  }
+}
+
+/**
+ * Calculate expiration status for Hosting (7-day warning period, same color scheme as VPS)
+ * @param expiresAt - ISO date string or null
+ * @param warningDays - Number of days before expiry to show warning (default: 7 for Hosting)
+ * @returns ExpirationStatus object with status, days until expiry, and CSS class
+ */
+export function calculateHostingExpirationStatus(expiresAt: string | null | undefined, warningDays: number = 7): ExpirationStatus {
+  if (!expiresAt) {
+    return {
+      status: 'UNKNOWN',
+      daysUntilExpiry: null,
+      cssClass: 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const now = new Date()
+  const expiryDate = new Date(expiresAt)
+  const diffTime = expiryDate.getTime() - now.getTime()
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+  if (diffDays < 0) {
+    // Expired - Merah
+    return {
+      status: 'EXPIRED',
+      daysUntilExpiry: Math.abs(diffDays),
+      cssClass: 'bg-red-100 text-red-800'
+    }
+  } else if (diffDays <= warningDays) {
+    // Expiring soon (within 7 days) - Kuning
+    return {
+      status: 'EXPIRING_SOON',
+      daysUntilExpiry: diffDays,
+      cssClass: 'bg-yellow-100 text-yellow-800'
+    }
+  } else {
+    // Active (more than 7 days) - Biru
+    return {
+      status: 'ACTIVE',
+      daysUntilExpiry: diffDays,
+      cssClass: 'bg-blue-100 text-blue-800'
     }
   }
 }
@@ -126,13 +170,17 @@ export function getStatusClass(status: string): string {
  * @param expiresAt - ISO date string or null
  * @param warningDays - Number of days before expiry to show warning (default: 30)
  * @param isVPS - Whether this is a VPS (uses 7-day warning instead of 30)
+ * @param isHosting - Whether this is a Hosting (uses 7-day warning and same color scheme as VPS)
  * @returns CSS class string prioritizing expiration status over database status
  */
-export function getComprehensiveStatusClass(status: string, expiresAt: string | null | undefined, warningDays: number = 30, isVPS: boolean = false): string {
+export function getComprehensiveStatusClass(status: string, expiresAt: string | null | undefined, warningDays: number = 30, isVPS: boolean = false, isHosting: boolean = false): string {
   // If we have an expiration date, prioritize expiration status
   if (expiresAt) {
     if (isVPS) {
       const expirationStatus = calculateVPSExpirationStatus(expiresAt, 7)
+      return expirationStatus.cssClass
+    } else if (isHosting) {
+      const expirationStatus = calculateHostingExpirationStatus(expiresAt, 7)
       return expirationStatus.cssClass
     } else {
       const expirationStatus = calculateExpirationStatus(expiresAt, warningDays)
@@ -155,17 +203,31 @@ export function formatDate(dateString?: string | null): string {
 }
 
 /**
- * Get expiration message based on status (with VPS support)
+ * Get expiration message based on status (with VPS and Hosting support)
  * @param expiresAt - ISO date string or null
  * @param warningDays - Number of days before expiry to show warning (default: 30)
  * @param isVPS - Whether this is a VPS (uses 7-day warning instead of 30)
+ * @param isHosting - Whether this is a Hosting (uses 7-day warning instead of 30)
  * @returns Human readable message
  */
-export function getExpirationMessage(expiresAt: string | null | undefined, warningDays: number = 30, isVPS: boolean = false): string {
+export function getExpirationMessage(expiresAt: string | null | undefined, warningDays: number = 30, isVPS: boolean = false, isHosting: boolean = false): string {
   if (!expiresAt) return 'No expiration date'
   
   if (isVPS) {
     const expirationStatus = calculateVPSExpirationStatus(expiresAt, 7)
+    
+    switch (expirationStatus.status) {
+      case 'EXPIRED':
+        return `Expired ${expirationStatus.daysUntilExpiry} days ago`
+      case 'EXPIRING_SOON':
+        return `Expires in ${expirationStatus.daysUntilExpiry} days`
+      case 'ACTIVE':
+        return `Expires in ${expirationStatus.daysUntilExpiry} days`
+      default:
+        return 'Unknown expiration'
+    }
+  } else if (isHosting) {
+    const expirationStatus = calculateHostingExpirationStatus(expiresAt, 7)
     
     switch (expirationStatus.status) {
       case 'EXPIRED':

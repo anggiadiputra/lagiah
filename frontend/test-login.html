@@ -3,17 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Test</title>
+    <title>Lagiah API Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        button { margin: 10px; padding: 10px 20px; }
+        .result { margin: 20px 0; padding: 10px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        .debug { background-color: #fff3cd; border-color: #ffeaa7; }
+    </style>
 </head>
 <body>
-    <h1>Login Test</h1>
+    <h1>Lagiah API Debug Test</h1>
+    
     <button onclick="testLogin()">Test Login</button>
+    <button onclick="testDashboard()">Test Dashboard (requires login)</button>
+    <button onclick="testAllEndpoints()">Test All Dashboard Endpoints</button>
+    <button onclick="testWithAxios()">Test with Axios (like frontend)</button>
+    <button onclick="clearToken()">Clear Token</button>
+    <button onclick="checkToken()">Check Current Token</button>
+    <button onclick="debugNetwork()">Debug Network Issues</button>
+    
     <div id="result"></div>
 
     <script>
         async function testLogin() {
             const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = 'Testing login...';
+            resultDiv.innerHTML = '<div class="result info">Testing login...</div>';
             
             try {
                 const response = await fetch('http://localhost:3004/api/v1/auth/login', {
@@ -32,27 +50,287 @@
                 console.log('Full response:', response);
                 console.log('Response data:', data);
                 
-                resultDiv.innerHTML = `
-                    <h3>Response Status: ${response.status}</h3>
-                    <h3>Response Data:</h3>
-                    <pre>${JSON.stringify(data, null, 2)}</pre>
-                `;
-                
                 if (data.status === 'success' && data.data) {
-                    console.log('✅ Login successful!');
-                    console.log('User:', data.data.user);
-                    console.log('Token:', data.data.token);
+                    // Store token
+                    localStorage.setItem('auth_token', data.data.token);
+                    
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <h3>✅ Login successful!</h3>
+                            <p><strong>User:</strong> ${data.data.user.name} (${data.data.user.email})</p>
+                            <p><strong>Role:</strong> ${data.data.user.role}</p>
+                            <p><strong>Token:</strong> ${data.data.token.substring(0, 50)}...</p>
+                        </div>
+                    `;
                 } else {
-                    console.log('❌ Login failed:', data.error);
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <h3>❌ Login failed</h3>
+                            <p>${data.error?.message || 'Unknown error'}</p>
+                        </div>
+                    `;
                 }
                 
             } catch (error) {
                 console.error('❌ Error:', error);
                 resultDiv.innerHTML = `
-                    <h3>Error:</h3>
-                    <pre>${error.message}</pre>
+                    <div class="result error">
+                        <h3>❌ Error</h3>
+                        <p>${error.message}</p>
+                    </div>
                 `;
             }
+        }
+
+        async function testDashboard() {
+            const resultDiv = document.getElementById('result');
+            const token = localStorage.getItem('auth_token');
+            
+            if (!token) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ No token found</h3>
+                        <p>Please login first using the "Test Login" button.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="result info">Testing dashboard API...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:3004/api/v1/dashboard/stats', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <h3>✅ Dashboard API working!</h3>
+                            <p><strong>Domains:</strong> ${data.data.domains.total} total, ${data.data.domains.active} active</p>
+                            <p><strong>Hosting:</strong> ${data.data.hosting.total} total, ${data.data.hosting.active} active</p>
+                            <p><strong>VPS:</strong> ${data.data.vps.total} total, ${data.data.vps.active} active</p>
+                            <p><strong>Websites:</strong> ${data.data.websites.total} total, ${data.data.websites.active} active</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <h3>❌ Dashboard API failed</h3>
+                            <p>${data.error?.message || 'Unknown error'}</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testWithAxios() {
+            const resultDiv = document.getElementById('result');
+            const token = localStorage.getItem('auth_token');
+            
+            if (!token) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ No token found</h3>
+                        <p>Please login first using the "Test Login" button.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="result info">Testing with Axios (like frontend)...</div>';
+            
+            try {
+                // Simulate the frontend API call
+                const response = await fetch('http://localhost:3004/api/v1/dashboard/stats', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <h3>✅ Axios-style test successful!</h3>
+                            <p>This confirms the API works with the same headers as the frontend.</p>
+                            <p><strong>Response status:</strong> ${response.status}</p>
+                            <p><strong>Data:</strong> ${JSON.stringify(data.data, null, 2)}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <h3>❌ Axios-style test failed</h3>
+                            <p>${data.error?.message || 'Unknown error'}</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testAllEndpoints() {
+            const resultDiv = document.getElementById('result');
+            const token = localStorage.getItem('auth_token');
+            
+            if (!token) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ No token found</h3>
+                        <p>Please login first using the "Test Login" button.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="result info">Testing all dashboard endpoints...</div>';
+            
+            const endpoints = [
+                { name: 'Dashboard Stats', url: '/api/v1/dashboard/stats' },
+                { name: 'Recent Activity', url: '/api/v1/dashboard/activity' },
+                { name: 'Expiring Domains', url: '/api/v1/dashboard/expiring-domains' },
+                { name: 'Expiring Hosting', url: '/api/v1/dashboard/expiring-hosting' },
+                { name: 'Expiring VPS', url: '/api/v1/dashboard/expiring-vps' }
+            ];
+            
+            const results = [];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(`http://localhost:3004${endpoint.url}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        results.push(`✅ ${endpoint.name}: Success`);
+                    } else {
+                        results.push(`❌ ${endpoint.name}: ${data.error?.message || 'Failed'}`);
+                    }
+                } catch (error) {
+                    results.push(`❌ ${endpoint.name}: ${error.message}`);
+                }
+            }
+            
+            resultDiv.innerHTML = `
+                <div class="result info">
+                    <h3>Dashboard Endpoints Test Results:</h3>
+                    <pre>${results.join('\n')}</pre>
+                </div>
+            `;
+        }
+
+        async function debugNetwork() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="result debug">Debugging network issues...</div>';
+            
+            const tests = [];
+            
+            // Test 1: Basic connectivity
+            try {
+                const response = await fetch('http://localhost:3004/api/v1/health');
+                const data = await response.json();
+                tests.push(`✅ Basic connectivity: ${data.data?.status || 'Unknown'}`);
+            } catch (error) {
+                tests.push(`❌ Basic connectivity: ${error.message}`);
+            }
+            
+            // Test 2: CORS
+            try {
+                const response = await fetch('http://localhost:3004/api/v1/health', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                tests.push(`✅ CORS test: ${response.status}`);
+            } catch (error) {
+                tests.push(`❌ CORS test: ${error.message}`);
+            }
+            
+            // Test 3: Token storage
+            const token = localStorage.getItem('auth_token');
+            if (token) {
+                tests.push(`✅ Token storage: ${token.length} characters`);
+            } else {
+                tests.push(`❌ Token storage: No token found`);
+            }
+            
+            resultDiv.innerHTML = `
+                <div class="result debug">
+                    <h3>Network Debug Results:</h3>
+                    <pre>${tests.join('\n')}</pre>
+                </div>
+            `;
+        }
+
+        function checkToken() {
+            const resultDiv = document.getElementById('result');
+            const token = localStorage.getItem('auth_token');
+            
+            if (token) {
+                resultDiv.innerHTML = `
+                    <div class="result info">
+                        <h3>Current Token:</h3>
+                        <p><strong>Present:</strong> Yes</p>
+                        <p><strong>Length:</strong> ${token.length} characters</p>
+                        <p><strong>Preview:</strong> ${token.substring(0, 50)}...</p>
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>No Token Found</h3>
+                        <p>No authentication token is currently stored.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function clearToken() {
+            localStorage.removeItem('auth_token');
+            document.getElementById('result').innerHTML = `
+                <div class="result">
+                    <h3>Token cleared</h3>
+                    <p>Authentication token has been removed from localStorage.</p>
+                </div>
+            `;
         }
     </script>
 </body>

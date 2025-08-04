@@ -356,29 +356,44 @@ const handleSubmit = async () => {
       name: form.value.domain.trim().toLowerCase(),
       // Ensure empty string becomes undefined to pass backend validation
       hostingId: form.value.hostingId || undefined,
-
       notes: form.value.notes || undefined,
     }
 
     console.log('[AddDomainModal] Form values:', form.value);
-
     console.log('[AddDomainModal] Submitting with data:', domainData)
     
     const response = await domainStore.createDomain(domainData)
     console.log('[AddDomainModal] Store response:', response)
 
+    // Handle response format from API
     if (response && response.status === 'success' && response.data) {
       console.log('[AddDomainModal] Domain created successfully:', response.data)
       emit('success', response.data)
       closeModal()
     } else {
       console.error('[AddDomainModal] Failed to create domain:', response)
-      error.value = response?.message || response?.error?.message || 'An unknown error occurred.'
+      // Handle different error formats
+      if (response && response.message) {
+        error.value = response.message
+      } else if (response && response.error && typeof response.error === 'string') {
+        error.value = response.error
+      } else if (response && response.error && response.error.message) {
+        error.value = response.error.message
+      } else {
+        error.value = 'An unknown error occurred while creating the domain.'
+      }
     }
 
   } catch (err: any) {
     console.error('[AddDomainModal] Exception during submission:', err)
-    error.value = err.message || 'An unexpected client-side error occurred.'
+    // Handle different error types
+    if (err.response && err.response.status === 405) {
+      error.value = 'Method not allowed. Please try again.'
+    } else if (err.message) {
+      error.value = err.message
+    } else {
+      error.value = 'An unexpected client-side error occurred.'
+    }
   } finally {
     isLoading.value = false
   }
