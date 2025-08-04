@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/database'
-import { successResponse, errorResponse, getUserFromHeaders, cleanupExpiredHostingAssignments } from '@/lib/utils'
+import { successResponse, errorResponse, getUserFromHeaders, cleanupExpiredHostingAssignments, logActivity, getClientIP, getUserAgent } from '@/lib/utils'
 import { withApiMiddleware, withMethods, withRoles } from '@/middleware/api-middleware'
 import { createHostingSchema, paginationSchema, sortSchema } from '@/lib/validation/schemas'
 import { HostingStatus } from '@/generated/prisma'
@@ -53,6 +53,24 @@ async function getHosting(req: NextRequest) {
   
   // Get total count
   const total = await prisma.hosting.count({ where })
+  
+  // Log activity for hosting listing
+  await logActivity({
+    userId: user.id,
+    action: 'READ',
+    entity: 'HOSTING',
+    entityId: 'list',
+    description: `Listed hosting accounts (page: ${page}, limit: ${limit})`,
+    metadata: {
+      page,
+      limit,
+      total,
+      filters: { status: statusParam, provider },
+      sort: `${sort}:${order}`
+    },
+    ipAddress: getClientIP(req),
+    userAgent: getUserAgent(req)
+  })
   
       // Total hosting count
   
@@ -275,28 +293,41 @@ async function createHosting(req: NextRequest) {
       });
       
       // Log activity
-      await prisma.activityLog.create({
-        data: {
-          action: 'CREATE',
-          entity: 'HOSTING',
-          entityId: hosting.id,
-          description: `Created hosting account: ${hosting.provider} - ${hosting.planName}`,
-          userId: user.id,
+      await logActivity({
+        userId: user.id,
+        action: 'CREATE',
+        entity: 'HOSTING',
+        entityId: hosting.id,
+        description: `Created hosting account: ${hosting.provider} - ${hosting.planName}`,
+        metadata: {
+          hostingName: hosting.name,
+          provider: hosting.provider,
+          planName: hosting.planName,
+          assignedDomains: domainIds?.length || 0
         },
+        ipAddress: getClientIP(req),
+        userAgent: getUserAgent(req),
+        hostingId: hosting.id
       });
       
       return successResponse(updatedHosting, 201);
     }
     
     // Log activity
-    await prisma.activityLog.create({
-      data: {
-        action: 'CREATE',
-        entity: 'HOSTING',
-        entityId: hosting.id,
-        description: `Created hosting account: ${hosting.provider} - ${hosting.planName}`,
-        userId: user.id,
+    await logActivity({
+      userId: user.id,
+      action: 'CREATE',
+      entity: 'HOSTING',
+      entityId: hosting.id,
+      description: `Created hosting account: ${hosting.provider} - ${hosting.planName}`,
+      metadata: {
+        hostingName: hosting.name,
+        provider: hosting.provider,
+        planName: hosting.planName
       },
+      ipAddress: getClientIP(req),
+      userAgent: getUserAgent(req),
+      hostingId: hosting.id
     });
     
     return successResponse(hosting, 201);

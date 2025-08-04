@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/database'
-import { successResponse, errorResponse, getUserFromHeaders } from '@/lib/utils'
+import { successResponse, errorResponse, getUserFromHeaders, logActivity, getClientIP, getUserAgent } from '@/lib/utils'
 import { withApiMiddleware, withMethods, withRoles } from '@/middleware/api-middleware'
 import { createVpsSchema, paginationSchema, sortSchema } from '@/lib/validation/schemas'
 import { VPSStatus } from '@/generated/prisma'
@@ -53,6 +53,24 @@ async function getVps(req: NextRequest) {
   
   // Get total count
   const total = await prisma.vPS.count({ where })
+  
+  // Log activity for VPS listing
+  await logActivity({
+    userId: user.id,
+    action: 'READ',
+    entity: 'VPS',
+    entityId: 'list',
+    description: `Listed VPS servers (page: ${page}, limit: ${limit})`,
+    metadata: {
+      page,
+      limit,
+      total,
+      filters: { status: statusParam, provider, search },
+      sort: `${sort}:${order}`
+    },
+    ipAddress: getClientIP(req),
+    userAgent: getUserAgent(req)
+  })
   
   // Get VPS servers
   const vpsServers = await prisma.vPS.findMany({
@@ -293,14 +311,20 @@ async function createVps(req: NextRequest) {
   }
   
   // Log activity
-  await prisma.activityLog.create({
-    data: {
-      action: 'CREATE',
-      entity: 'VPS',
-      entityId: vps.id,
-      description: `VPS server created: ${vps.name}`,
-      userId: user.id,
+  await logActivity({
+    userId: user.id,
+    action: 'CREATE',
+    entity: 'VPS',
+    entityId: vps.id,
+    description: `Created VPS server: ${vps.name}`,
+    metadata: {
+      vpsName: vps.name,
+      provider: vps.provider,
+      assignedDomains: domainIds?.length || 0
     },
+    ipAddress: getClientIP(req),
+    userAgent: getUserAgent(req),
+    vpsId: vps.id
   })
   
   // Refetch VPS with updated domain relationships

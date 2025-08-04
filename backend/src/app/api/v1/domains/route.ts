@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/database'
-import { successResponse, errorResponse, getUserFromHeaders } from '@/lib/utils'
+import { successResponse, errorResponse, getUserFromHeaders, logActivity, getClientIP, getUserAgent } from '@/lib/utils'
 import { withApiMiddleware, withMethods, withRoles } from '@/middleware/api-middleware'
 import { createDomainSchema, paginationSchema, sortSchema } from '@/lib/validation/schemas'
 import { DomainStatus } from '@/generated/prisma'
@@ -51,6 +51,7 @@ async function getDomains(req: NextRequest) {
     
     // Get user from headers
     const user = getUserFromHeaders(req.headers)
+    
     // User from headers
     
     // Convert status string to enum if provided
@@ -87,6 +88,24 @@ async function getDomains(req: NextRequest) {
     const countStartTime = Date.now()
     const total = await prisma.domain.count({ where })
     const countTime = Date.now() - countStartTime
+    
+    // Log activity for domain listing
+    await logActivity({
+      userId: user.id,
+      action: 'READ',
+      entity: 'DOMAIN',
+      entityId: 'list',
+      description: `Listed domains (page: ${page}, limit: ${limit})`,
+      metadata: {
+        page,
+        limit,
+        total,
+        filters: { status: statusParam, registrar: registrarParam, search },
+        sort: `${sort}:${order}`
+      },
+      ipAddress: getClientIP(req),
+      userAgent: getUserAgent(req)
+    })
 
     
     // Get domains with error handling and optimized query
@@ -279,7 +298,23 @@ async function createDomain(req: NextRequest) {
       });
       // DB creation successful
       
-      // Activity Log can be added here
+      // Log activity
+      await logActivity({
+        userId: user.id,
+        action: 'CREATE',
+        entity: 'DOMAIN',
+        entityId: newDomain.id,
+        description: `Created domain: ${newDomain.name}`,
+        metadata: {
+          domainName: newDomain.name,
+          registrar: newDomain.registrar,
+          status: newDomain.status,
+          whoisIntegrated: !!whoisData
+        },
+        ipAddress: getClientIP(req),
+        userAgent: getUserAgent(req),
+        domainId: newDomain.id
+      })
       
       return successResponse({ ...newDomain, whoisIntegrated: !!whoisData }, 201);
     } catch (dbError: any) {

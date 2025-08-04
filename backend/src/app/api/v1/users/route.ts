@@ -3,6 +3,7 @@ import { prisma } from '@/lib/database'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { verifyJwtToken } from '@/lib/auth/jwt'
+import { logActivity, getClientIP, getUserAgent } from '@/lib/utils'
 
 // Validation schemas
 const createUserSchema = z.object({
@@ -122,6 +123,24 @@ export async function GET(request: NextRequest) {
     ])
     
     const totalPages = Math.ceil(total / limit)
+    
+    // Log activity for user listing
+    await logActivity({
+      userId: authUser.id,
+      action: 'READ',
+      entity: 'USER',
+      entityId: 'list',
+      description: `Listed users (page: ${page}, limit: ${limit})`,
+      metadata: {
+        page,
+        limit,
+        total,
+        filters: { search, role },
+        totalPages
+      },
+      ipAddress: getClientIP(request),
+      userAgent: getUserAgent(request)
+    })
     
     return NextResponse.json({
       status: 'success',
@@ -273,18 +292,19 @@ export async function POST(request: NextRequest) {
     })
     
     // Log activity
-    await prisma.activityLog.create({
-      data: {
-        action: 'CREATE',
-        entity: 'USER',
-        entityId: user.id,
-        description: `Created user: ${user.name} (${user.email})`,
-        userId: authUser.id, // Use authenticated user ID
-        metadata: {
-          userRole: user.role,
-          userEmail: user.email
-        }
-      }
+    await logActivity({
+      userId: authUser.id,
+      action: 'CREATE',
+      entity: 'USER',
+      entityId: user.id,
+      description: `Created user: ${user.name} (${user.email})`,
+      metadata: {
+        userName: user.name,
+        userEmail: user.email,
+        userRole: user.role
+      },
+      ipAddress: getClientIP(request),
+      userAgent: getUserAgent(request)
     })
     
     return NextResponse.json({

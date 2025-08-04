@@ -172,3 +172,84 @@ export async function cleanupExpiredHostingAssignments() {
     throw error;
   }
 } 
+
+/**
+ * Log user activity to the database
+ */
+export async function logActivity({
+  userId,
+  action,
+  entity,
+  entityId,
+  description,
+  metadata = {},
+  ipAddress,
+  userAgent,
+  domainId,
+  hostingId,
+  vpsId,
+  websiteId
+}: {
+  userId: string
+  action: 'CREATE' | 'READ' | 'UPDATE' | 'DELETE' | 'LOGIN' | 'LOGOUT' | 'EXPORT' | 'IMPORT'
+  entity: 'USER' | 'DOMAIN' | 'HOSTING' | 'VPS' | 'WEBSITE' | 'SETTING'
+  entityId: string
+  description: string
+  metadata?: any
+  ipAddress?: string
+  userAgent?: string
+  domainId?: string
+  hostingId?: string
+  vpsId?: string
+  websiteId?: string
+}) {
+  try {
+    await prisma.activityLog.create({
+      data: {
+        userId,
+        action,
+        entity,
+        entityId,
+        description,
+        metadata,
+        ipAddress,
+        userAgent,
+        domainId,
+        hostingId,
+        vpsId,
+        websiteId
+      }
+    })
+  } catch (error) {
+    // Don't throw error for activity logging failures
+    console.error('Failed to log activity:', error)
+  }
+}
+
+/**
+ * Get client IP address from request headers
+ */
+export function getClientIP(req: Request): string | undefined {
+  const forwarded = req.headers.get('x-forwarded-for')
+  const realIP = req.headers.get('x-real-ip')
+  const cfConnectingIP = req.headers.get('cf-connecting-ip')
+  
+  if (forwarded) {
+    return forwarded.split(',')[0].trim()
+  }
+  if (realIP) {
+    return realIP
+  }
+  if (cfConnectingIP) {
+    return cfConnectingIP
+  }
+  
+  return undefined
+}
+
+/**
+ * Get user agent from request headers
+ */
+export function getUserAgent(req: Request): string | undefined {
+  return req.headers.get('user-agent') || undefined
+} 

@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { withRoles } from '@/middleware/api-middleware'
 import { prisma } from '@/lib/database'
-import { successResponse, errorResponse, getUserFromHeaders } from '@/lib/utils'
+import { successResponse, errorResponse, getUserFromHeaders, logActivity, getClientIP, getUserAgent } from '@/lib/utils'
 import { createWebsiteSchema } from '@/lib/validation/schemas'
 
 /**
@@ -40,6 +40,25 @@ async function getWebsites(req: NextRequest) {
     
     // Get total count
     const total = await prisma.website.count({ where })
+    
+    // Log activity for website listing
+    await logActivity({
+      userId: user.id,
+      action: 'READ',
+      entity: 'WEBSITE',
+      entityId: 'list',
+      description: `Listed websites (page: ${page}, limit: ${limit})`,
+      metadata: {
+        page,
+        limit,
+        total,
+        filters: { status, search },
+        sort
+      },
+      ipAddress: getClientIP(req),
+      userAgent: getUserAgent(req)
+    })
+    
     // Total websites count
     
     // Get websites with pagination
@@ -243,6 +262,26 @@ async function createWebsite(req: NextRequest) {
       })
       
       // Website created successfully
+      
+      // Log activity
+      await logActivity({
+        userId: user.id,
+        action: 'CREATE',
+        entity: 'WEBSITE',
+        entityId: website.id,
+        description: `Created website: ${website.name}`,
+        metadata: {
+          websiteName: website.name,
+          websiteUrl: website.url,
+          cms: website.cms,
+          domainId: website.domainId,
+          hostingId: website.hostingId,
+          vpsId: website.vpsId
+        },
+        ipAddress: getClientIP(req),
+        userAgent: getUserAgent(req),
+        websiteId: website.id
+      })
       
       return successResponse(website, 201)
     } catch (dbError: any) {

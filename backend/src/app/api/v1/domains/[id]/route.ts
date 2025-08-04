@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/database'
-import { successResponse, errorResponse, getUserFromHeaders } from '@/lib/utils'
+import { successResponse, errorResponse, getUserFromHeaders, logActivity, getClientIP, getUserAgent } from '@/lib/utils'
 import { withApiMiddleware, withMethods, withRoles } from '@/middleware/api-middleware'
 import { updateDomainSchema, idSchema } from '@/lib/validation/schemas'
 
@@ -64,6 +64,22 @@ async function getDomain(req: NextRequest, { params }: RouteContext) {
   if (!domain) {
     return errorResponse('Domain not found', 'DOMAIN_NOT_FOUND', 404)
   }
+
+  // Log activity for viewing domain
+  await logActivity({
+    userId: user.id,
+    action: 'READ',
+    entity: 'DOMAIN',
+    entityId: domain.id,
+    description: `Viewed domain: ${domain.name}`,
+    metadata: {
+      domainName: domain.name,
+      domainId: domain.id
+    },
+    ipAddress: getClientIP(req),
+    userAgent: getUserAgent(req),
+    domainId: domain.id
+  })
 
   return successResponse(domain)
 }
@@ -189,14 +205,20 @@ async function updateDomain(req: NextRequest, { params }: RouteContext) {
   })
 
   // Log activity
-  await prisma.activityLog.create({
-    data: {
-      action: 'UPDATE',
-      entity: 'DOMAIN',
-      entityId: domain.id,
-      description: `Domain updated: ${domain.name}`,
-      userId: user.id,
+  await logActivity({
+    userId: user.id,
+    action: 'UPDATE',
+    entity: 'DOMAIN',
+    entityId: domain.id,
+    description: `Updated domain: ${domain.name}`,
+    metadata: {
+      domainName: domain.name,
+      changes: result.data,
+      previousData: existingDomain
     },
+    ipAddress: getClientIP(req),
+    userAgent: getUserAgent(req),
+    domainId: domain.id
   })
 
   return successResponse(domain)
@@ -217,7 +239,25 @@ async function deleteDomain(req: NextRequest, { params }: RouteContext) {
       return errorResponse('Domain not found', 'NOT_FOUND', 404)
     }
     
+    // Get user from headers for activity logging
+    const user = getUserFromHeaders(req.headers)
+    
     await prisma.domain.delete({ where: { id } })
+    
+    // Log activity
+    await logActivity({
+      userId: user.id,
+      action: 'DELETE',
+      entity: 'DOMAIN',
+      entityId: id,
+      description: `Deleted domain: ${existingDomain.name}`,
+      metadata: {
+        domainName: existingDomain.name,
+        domainId: id
+      },
+      ipAddress: getClientIP(req),
+      userAgent: getUserAgent(req)
+    })
     
     // Successfully deleted domain
     return successResponse({
