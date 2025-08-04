@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JWT Token Checker</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #2563eb;
+    }
+    .card {
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .error {
+      color: #dc2626;
+      background-color: #fee2e2;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    .success {
+      color: #059669;
+      background-color: #d1fae5;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    pre {
+      background: #f1f5f9;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #1d4ed8;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin: 8px 0;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+    }
+    textarea {
+      height: 100px;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table td, table th {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+    table th {
+      background-color: #f2f2f2;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <h1>JWT Token Checker</h1>
+  
+  <div class="card">
+    <h2>Current Token</h2>
+    <div id="current-token-info">Loading...</div>
+    <div class="actions">
+      <button id="refresh-token">Refresh Token Info</button>
+      <button id="clear-token">Clear Token</button>
+    </div>
+  </div>
+  
+  <div class="card">
+    <h2>Update Token</h2>
+    <textarea id="new-token" placeholder="Paste your JWT token here"></textarea>
+    <div class="actions">
+      <button id="update-token">Update Token</button>
+      <button id="decode-token">Decode Token</button>
+    </div>
+    <div id="token-decode-result"></div>
+  </div>
+  
+  <div class="card">
+    <h2>Test API Connection</h2>
+    <div class="actions">
+      <button id="test-me">Test /api/v1/auth/me</button>
+      <button id="test-domains">Test /api/v1/domains</button>
+    </div>
+    <div id="api-test-result"></div>
+  </div>
+  
+  <div class="card">
+    <h2>Generate Sample Token</h2>
+    <div>
+      <label for="user-id">User ID:</label>
+      <input type="text" id="user-id" value="cmd8wsod90000mm3hi5jtrut9">
+      <label for="user-email">Email:</label>
+      <input type="text" id="user-email" value="admin@lagiah.com">
+      <label for="user-role">Role:</label>
+      <select id="user-role">
+        <option value="ADMIN">ADMIN</option>
+        <option value="STAFF">STAFF</option>
+        <option value="VIEWER">VIEWER</option>
+      </select>
+    </div>
+    <div class="actions">
+      <button id="generate-token">Generate Token</button>
+    </div>
+    <div id="generate-result"></div>
+  </div>
+
+  <script>
+    // Function to decode JWT token
+    function decodeJwt(token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // Function to format date
+    function formatDate(timestamp) {
+      return new Date(timestamp * 1000).toLocaleString();
+    }
+
+    // Function to check token expiration
+    function isTokenExpired(decodedToken) {
+      if (!decodedToken || !decodedToken.exp) return true;
+      const currentTime = Math.floor(Date.now() / 1000);
+      return decodedToken.exp < currentTime;
+    }
+
+    // Function to display token info
+    function displayTokenInfo(token) {
+      const tokenInfoElement = document.getElementById('current-token-info');
+      
+      if (!token) {
+        tokenInfoElement.innerHTML = '<div class="error">No token found in localStorage</div>';
+        return;
+      }
+      
+      const decoded = decodeJwt(token);
+      if (!decoded) {
+        tokenInfoElement.innerHTML = '<div class="error">Invalid token format</div>';
+        return;
+      }
+      
+      const isExpired = isTokenExpired(decoded);
+      const expiryClass = isExpired ? 'error' : 'success';
+      const expiryStatus = isExpired ? 'Expired' : 'Valid';
+      
+      let html = `
+        <div class="${expiryClass}">Token Status: ${expiryStatus}</div>
+        <pre>${token.substring(0, 20)}...${token.substring(token.length - 20)}</pre>
+        <h3>Decoded Information:</h3>
+        <table>
+          <tr><th>Field</th><th>Value</th></tr>
+      `;
+      
+      for (const [key, value] of Object.entries(decoded)) {
+        if (key === 'exp' || key === 'iat') {
+          html += `<tr><td>${key}</td><td>${value} (${formatDate(value)})</td></tr>`;
+        } else {
+          html += `<tr><td>${key}</td><td>${JSON.stringify(value)}</td></tr>`;
+        }
+      }
+      
+      html += '</table>';
+      tokenInfoElement.innerHTML = html;
+    }
+
+    // Function to test API endpoints
+    async function testApiEndpoint(endpoint) {
+      const resultElement = document.getElementById('api-test-result');
+      resultElement.innerHTML = '<div>Testing API connection...</div>';
+      
+      try {
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+          resultElement.innerHTML = '<div class="error">No token available for API test</div>';
+          return;
+        }
+        
+        const response = await fetch(`http://localhost:3004${endpoint}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const data = await response.json();
+        
+        resultElement.innerHTML = `
+          <div class="${response.ok ? 'success' : 'error'}">
+            Status: ${response.status} ${response.statusText}
+          </div>
+          <pre>${JSON.stringify(data, null, 2)}</pre>
+        `;
+      } catch (error) {
+        resultElement.innerHTML = `
+          <div class="error">Error: ${error.message}</div>
+        `;
+      }
+    }
+
+    // Generate a simple JWT token (for testing only)
+    function generateSimpleJwt(payload) {
+      // This is NOT secure and should ONLY be used for testing
+      // In a real app, JWT should be generated server-side with proper signing
+      
+      // Create header
+      const header = {
+        alg: 'HS256',
+        typ: 'JWT'
+      };
+      
+      // Add timestamps to payload
+      const now = Math.floor(Date.now() / 1000);
+      payload.iat = now;
+      payload.exp = now + 2592000; // 30 days
+      
+      // Encode parts
+      const encodedHeader = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+      const encodedPayload = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+      
+      // In a real implementation, this would be signed with a secret key
+      // Here we're just creating a dummy signature for testing
+      const dummySignature = btoa('test-signature').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+      
+      return `${encodedHeader}.${encodedPayload}.${dummySignature}`;
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      // Display current token info
+      const token = localStorage.getItem('auth_token');
+      displayTokenInfo(token);
+      
+      // Event listeners
+      document.getElementById('refresh-token').addEventListener('click', function() {
+        const token = localStorage.getItem('auth_token');
+        displayTokenInfo(token);
+      });
+      
+      document.getElementById('clear-token').addEventListener('click', function() {
+        localStorage.removeItem('auth_token');
+        displayTokenInfo(null);
+        alert('Token cleared from localStorage');
+      });
+      
+      document.getElementById('update-token').addEventListener('click', function() {
+        const newToken = document.getElementById('new-token').value.trim();
+        if (!newToken) {
+          alert('Please enter a token');
+          return;
+        }
+        
+        localStorage.setItem('auth_token', newToken);
+        displayTokenInfo(newToken);
+        alert('Token updated in localStorage');
+      });
+      
+      document.getElementById('decode-token').addEventListener('click', function() {
+        const token = document.getElementById('new-token').value.trim();
+        if (!token) {
+          alert('Please enter a token to decode');
+          return;
+        }
+        
+        const decoded = decodeJwt(token);
+        const resultElement = document.getElementById('token-decode-result');
+        
+        if (decoded) {
+          const isExpired = isTokenExpired(decoded);
+          resultElement.innerHTML = `
+            <div class="${isExpired ? 'error' : 'success'}">
+              Token Status: ${isExpired ? 'Expired' : 'Valid'}
+            </div>
+            <pre>${JSON.stringify(decoded, null, 2)}</pre>
+          `;
+        } else {
+          resultElement.innerHTML = '<div class="error">Invalid token format</div>';
+        }
+      });
+      
+      document.getElementById('test-me').addEventListener('click', function() {
+        testApiEndpoint('/api/v1/auth/me');
+      });
+      
+      document.getElementById('test-domains').addEventListener('click', function() {
+        testApiEndpoint('/api/v1/domains?page=1&limit=10');
+      });
+      
+      document.getElementById('generate-token').addEventListener('click', function() {
+        const userId = document.getElementById('user-id').value.trim();
+        const email = document.getElementById('user-email').value.trim();
+        const role = document.getElementById('user-role').value;
+        
+        if (!userId || !email) {
+          alert('Please enter user ID and email');
+          return;
+        }
+        
+        const payload = {
+          id: userId,
+          email: email,
+          role: role,
+          isActive: true
+        };
+        
+        const token = generateSimpleJwt(payload);
+        const resultElement = document.getElementById('generate-result');
+        resultElement.innerHTML = `
+          <div class="success">Token generated (note: this is for testing only)</div>
+          <textarea>${token}</textarea>
+          <div class="actions">
+            <button id="use-generated-token">Use This Token</button>
+          </div>
+        `;
+        
+        document.getElementById('use-generated-token').addEventListener('click', function() {
+          localStorage.setItem('auth_token', token);
+          displayTokenInfo(token);
+          alert('Generated token saved to localStorage');
+        });
+      });
+    });
+  </script>
+</body>
+</html> 

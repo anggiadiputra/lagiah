@@ -6,13 +6,14 @@ export async function GET(
 ) {
   try {
     console.log('🔍 GET /users-simple/[id] called')
-    console.log('User ID:', params.id)
+    const { id } = params
+    console.log('User ID:', id)
     
     return NextResponse.json({
       status: 'success',
       data: { 
         user: {
-          id: params.id,
+          id: id,
           name: 'Test User',
           email: 'test@example.com'
         }
@@ -33,7 +34,8 @@ export async function PUT(
 ) {
   try {
     console.log('🔍 PUT /users-simple/[id] called')
-    console.log('User ID:', params.id)
+    const { id } = params
+    console.log('User ID:', id)
     
     const body = await request.json()
     console.log('Request body:', body)
@@ -43,7 +45,7 @@ export async function PUT(
       data: {
         message: 'User updated successfully',
         user: {
-          id: params.id,
+          id: id,
           name: body.name || 'Updated User',
           email: body.email || 'updated@example.com'
         }

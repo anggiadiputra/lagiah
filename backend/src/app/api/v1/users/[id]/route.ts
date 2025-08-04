@@ -77,7 +77,8 @@ export async function GET(
       )
     }
     
-    const userId = params.id
+    const { id } = params
+    const userId = id
     
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -204,7 +205,8 @@ export async function PUT(
     
     // Starting update process
     
-    const userId = params.id
+    const { id } = params
+    const userId = id
     
     const body = await request.json()
     
@@ -436,7 +438,8 @@ export async function DELETE(
       )
     }
     
-    const userId = params.id
+    const { id } = params
+    const userId = id
     
     // Check if user exists
     const existingUser = await prisma.user.findUnique({

@@ -7,16 +7,17 @@ export async function PUT(
   try {
     console.log('🔍 PUT /users-debug/[id] - Starting update process')
     
-    const userId = params.id
+    const { id } = params
+    const userId = id
     console.log('User ID:', userId)
     
     const body = await request.json()
     console.log('Request body:', body)
     
-    // Test import Prisma with different path
+    // Test import Prisma with correct path
     console.log('🔍 Testing Prisma import...')
     try {
-      const { PrismaClient } = await import('../../../../generated/prisma')
+      const { PrismaClient } = await import('@prisma/client')
       console.log('✅ PrismaClient imported successfully')
       
       const prisma = new PrismaClient()

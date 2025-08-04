@@ -1,0 +1,1 @@
+import{U as o}from"./index-CCw3ahY3.js";class a{async updateProfile(e){try{return(await o.updateProfile(e)).data}catch(r){throw console.error("Error updating profile:",r),r}}async changePassword(e){try{return(await o.changePassword(e)).data}catch(r){throw console.error("Error changing password:",r),r}}}const n=new a;export{n as a};
