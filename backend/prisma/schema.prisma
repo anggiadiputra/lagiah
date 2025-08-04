@@ -48,7 +48,7 @@ model Domain {
   expiresAt     DateTime?
   nameservers   Json?
   whoisData     Json?
-  notes         String?       @db.Text
+  notes         String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   createdBy     String
@@ -75,24 +75,24 @@ model Domain {
 }
 
 model Hosting {
-  id           String        @id @default(cuid())
-  name         String
-  provider     String
-  status       HostingStatus @default(ACTIVE)
-  planName     String?
-  resources    Json?
-  cpanelUrl    String?
-  username     String?
-  password     String?
-  expiresAt    DateTime?
-  notes        String?       @db.Text
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  createdBy    String
-  activities   ActivityLog[]
-  domains      Domain[]
-  user         User          @relation(fields: [createdBy], references: [id])
-  websites     Website[]
+  id         String        @id @default(cuid())
+  name       String
+  provider   String
+  status     HostingStatus @default(ACTIVE)
+  planName   String?
+  resources  Json?
+  cpanelUrl  String?
+  username   String?
+  password   String?
+  expiresAt  DateTime?
+  notes      String?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  createdBy  String
+  activities ActivityLog[]
+  domains    Domain[]
+  user       User          @relation(fields: [createdBy], references: [id])
+  websites   Website[]
 
   @@index([expiresAt])
   @@index([createdBy])
@@ -100,26 +100,26 @@ model Hosting {
 }
 
 model VPS {
-  id           String        @id @default(cuid())
-  name         String
-  provider     String
-  status       VPSStatus     @default(ACTIVE)
-  ipAddress    String?
-  specs        Json?
-  sshPort      Int?          @default(22)
-  sshKey       String?       @db.Text
-  username     String?
-  password     String?
-  expiresAt    DateTime?
-  notes        String?       @db.Text
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  createdBy    String
-  cpanelUrl    String?
-  activities   ActivityLog[]
-  domains      Domain[]
-  user         User          @relation(fields: [createdBy], references: [id])
-  websites     Website[]
+  id         String        @id @default(cuid())
+  name       String
+  provider   String
+  status     VPSStatus     @default(ACTIVE)
+  ipAddress  String?
+  specs      Json?
+  sshPort    Int?          @default(22)
+  sshKey     String?
+  username   String?
+  password   String?
+  expiresAt  DateTime?
+  notes      String?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  createdBy  String
+  cpanelUrl  String?
+  activities ActivityLog[]
+  domains    Domain[]
+  user       User          @relation(fields: [createdBy], references: [id])
+  websites   Website[]
 
   @@index([expiresAt])
   @@index([createdBy])
@@ -138,7 +138,7 @@ model Website {
   sslExpiry    DateTime?
   backupStatus String?
   lastBackup   DateTime?
-  notes        String?       @db.Text
+  notes        String?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   createdBy    String
@@ -194,7 +194,7 @@ model ActivityLog {
 model Setting {
   id        String   @id @default(cuid())
   key       String   @unique
-  value     String   @db.Text
+  value     String
   type      String   @default("string")
   category  String   @default("general")
   createdAt DateTime @default(now())
