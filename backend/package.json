@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack --port 3004",
     "dev:fixed": "node start-server.js",
     "start:3004": "PORT=3004 next dev --turbopack --port 3004",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "build:prod": "NODE_ENV=production next build",
     "start": "next start",
     "start:prod": "NODE_ENV=production next start -p 3004",
@@ -54,5 +54,8 @@
     "tailwindcss": "^4",
     "tsx": "^4.20.3",
     "typescript": "^5"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }
