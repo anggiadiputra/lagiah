@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/database'
-import { successResponse, errorResponse, getUserFromHeaders } from '@/lib/utils'
+import { successResponse, errorResponse, getUserFromHeaders, logActivity, getClientIP, getUserAgent } from '@/lib/utils'
 import { z } from 'zod'
 import { signJwtToken } from '@/lib/auth/jwt'
 import bcrypt from 'bcryptjs'
@@ -100,7 +100,21 @@ async function login(req: NextRequest) {
     
     // Token generated successfully
     
-    // No activity logging for LOGIN operations
+    // Log activity
+    await logActivity({
+      userId: user.id,
+      action: 'LOGIN',
+      entity: 'USER',
+      entityId: user.id,
+      description: `User logged in: ${user.name} (${user.email})`,
+      metadata: {
+        userName: user.name,
+        userEmail: user.email,
+        userRole: user.role
+      },
+      ipAddress: getClientIP(req),
+      userAgent: getUserAgent(req)
+    })
     
     // Create response data
     const responseData = {
