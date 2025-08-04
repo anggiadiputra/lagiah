@@ -261,16 +261,10 @@
                     User
                   </th>
                   <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Action
+                    Activity
                   </th>
                   <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Resource
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Description
-                  </th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Time
+                    Date & Time
                   </th>
                 </tr>
               </thead>
@@ -283,66 +277,35 @@
                       </div>
                       <div class="ml-3">
                         <div class="text-sm font-medium text-gray-900">{{ activity.userName || 'Unknown User' }}</div>
-                        <div class="text-xs text-gray-500">{{ activity.ipAddress || 'No IP' }}</div>
                       </div>
-                    </div>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span :class="{
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800': activity.action === 'CREATE',
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800': activity.action === 'READ',
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800': activity.action === 'UPDATE',
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800': activity.action === 'DELETE',
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800': activity.action === 'LOGIN',
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800': activity.action === 'LOGOUT',
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800': activity.action === 'EXPORT',
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800': activity.action === 'IMPORT'
-                    }">
-                      {{ activity.action }}
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="flex items-center">
-                      <!-- Entity Type Icon -->
-                      <svg v-if="activity.entityType === 'DOMAIN'" class="h-5 w-5 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                      </svg>
-                      <svg v-else-if="activity.entityType === 'HOSTING'" class="h-5 w-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
-                      </svg>
-                      <svg v-else-if="activity.entityType === 'VPS'" class="h-5 w-5 text-purple-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                      </svg>
-                      <svg v-else-if="activity.entityType === 'WEBSITE'" class="h-5 w-5 text-indigo-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                      </svg>
-                      <svg v-else-if="activity.entityType === 'USER'" class="h-5 w-5 text-gray-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                      <svg v-else-if="activity.entityType === 'SETTING'" class="h-5 w-5 text-orange-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <span class="text-sm font-medium text-gray-900">{{ activity.entityType }}</span>
                     </div>
                   </td>
                   <td class="px-6 py-4">
-                    <div class="text-sm text-gray-900 max-w-xs" :title="activity.details">
-                      <div class="truncate">{{ activity.details || 'No description' }}</div>
-                      <div v-if="activity.entityName && activity.entityName !== activity.details" class="text-xs text-gray-500 mt-1 truncate">
-                        {{ activity.entityName }}
-                      </div>
+                    <div class="text-sm text-gray-900">
+                      <span :class="{
+                        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2': activity.action === 'CREATE',
+                        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2': activity.action === 'READ',
+                        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mr-2': activity.action === 'UPDATE',
+                        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 mr-2': activity.action === 'DELETE',
+                        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mr-2': activity.action === 'LOGIN',
+                        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 mr-2': activity.action === 'LOGOUT',
+                        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 mr-2': activity.action === 'EXPORT',
+                        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800 mr-2': activity.action === 'IMPORT'
+                      }">
+                        {{ activity.action }}
+                      </span>
+                      <span class="text-gray-600">{{ activity.details || 'No description' }}</span>
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <div class="flex flex-col">
-                      <span>{{ formatTimeAgo(activity.createdAt) }}</span>
-                      <span class="text-xs text-gray-400">{{ formatDate(activity.createdAt) }}</span>
+                      <span class="font-medium">{{ formatDateTime(activity.createdAt) }}</span>
+                      <span class="text-xs text-gray-400">{{ formatTimeAgo(activity.createdAt) }}</span>
                     </div>
                   </td>
                 </tr>
                 <tr v-if="dashboardStore.recentActivity.length === 0">
-                  <td colspan="5" class="px-6 py-12 text-center">
+                  <td colspan="3" class="px-6 py-12 text-center">
                     <div class="text-gray-500">
                       <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -368,57 +331,30 @@
                     <div class="flex-1">
                       <div class="flex items-center space-x-2">
                         <span class="text-sm font-medium text-gray-900">{{ activity.userName || 'Unknown User' }}</span>
+                      </div>
+                      <div class="text-sm text-gray-900 mt-1">
                         <span :class="{
-                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800': activity.action === 'CREATE',
-                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800': activity.action === 'READ',
-                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800': activity.action === 'UPDATE',
-                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800': activity.action === 'DELETE',
-                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800': activity.action === 'LOGIN',
-                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800': activity.action === 'LOGOUT',
-                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800': activity.action === 'EXPORT',
-                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800': activity.action === 'IMPORT'
+                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2': activity.action === 'CREATE',
+                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2': activity.action === 'READ',
+                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mr-2': activity.action === 'UPDATE',
+                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 mr-2': activity.action === 'DELETE',
+                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mr-2': activity.action === 'LOGIN',
+                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 mr-2': activity.action === 'LOGOUT',
+                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 mr-2': activity.action === 'EXPORT',
+                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800 mr-2': activity.action === 'IMPORT'
                         }">
                           {{ activity.action }}
                         </span>
+                        <span class="text-gray-600">{{ activity.details || 'No description' }}</span>
                       </div>
-                      <div class="flex items-center space-x-2 mt-1">
-                        <!-- Entity Type Icon -->
-                        <svg v-if="activity.entityType === 'DOMAIN'" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                        </svg>
-                        <svg v-else-if="activity.entityType === 'HOSTING'" class="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
-                        </svg>
-                        <svg v-else-if="activity.entityType === 'VPS'" class="h-4 w-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
-                        <svg v-else-if="activity.entityType === 'WEBSITE'" class="h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                        </svg>
-                        <svg v-else-if="activity.entityType === 'USER'" class="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        <svg v-else-if="activity.entityType === 'SETTING'" class="h-4 w-4 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">{{ activity.entityType }}</span>
-                      </div>
-                      <div class="text-sm text-gray-900 mt-1" :title="activity.details">
-                        <div class="truncate">{{ activity.details || 'No description' }}</div>
-                        <div v-if="activity.entityName && activity.entityName !== activity.details" class="text-xs text-gray-500 mt-1 truncate">
-                          {{ activity.entityName }}
-                        </div>
-                      </div>
-                      <div class="text-xs text-gray-500 mt-1">{{ activity.ipAddress || 'No IP' }}</div>
                     </div>
                   </div>
                   <div class="text-right">
-                    <div class="text-xs text-gray-500">
-                      {{ formatTimeAgo(activity.createdAt) }}
+                    <div class="text-xs text-gray-500 font-medium">
+                      {{ formatDateTime(activity.createdAt) }}
                     </div>
                     <div class="text-xs text-gray-400 mt-1">
-                      {{ formatDate(activity.createdAt) }}
+                      {{ formatTimeAgo(activity.createdAt) }}
                     </div>
                   </div>
                 </div>
@@ -489,6 +425,19 @@ const formatDate = (dateString: string) => {
     year: 'numeric',
     month: 'short',
     day: 'numeric'
+  })
+}
+
+// Format date and time helper
+const formatDateTime = (dateString: string) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
   })
 }
 
