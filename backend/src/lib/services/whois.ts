@@ -1,5 +1,39 @@
 import { DomainStatus } from '@/generated/prisma'
 
+/**
+ * Map IANA Registrar ID to registrar name
+ */
+function getRegistrarNameFromId(id: string): string | null {
+  const registrarMap: { [key: string]: string } = {
+    '1478': 'PT. Daftar Nama Domain Indonesia (DND-ID)',
+    '1479': 'PT. Media Antar Nusa',
+    '1480': 'PT. Indosat',
+    '1481': 'PT. Telkom Indonesia',
+    '1482': 'PT. Cyberindo Aditama',
+    '1483': 'PT. Master Web Network',
+    '1484': 'PT. Artha Media Networks',
+    '1485': 'PT. CBN',
+    '1486': 'PT. Link Net',
+    '1487': 'PT. First Media',
+    '1488': 'PT. Biznet Networks',
+    '1489': 'PT. MNC Play Media',
+    '1490': 'PT. XL Axiata',
+    '1491': 'PT. Hutchison CP Telecommunications',
+    '1492': 'PT. Smartfren Telecom',
+    '1493': 'PT. Sampoerna Telekomunikasi Indonesia',
+    '1494': 'PT. Pasifik Satelit Nusantara',
+    '1495': 'PT. Aplikanusa Lintasarta',
+    '1496': 'PT. Sigma Cipta Caraka',
+    '1497': 'PT. Infokom Elektrindo',
+    '1498': 'PT. Mora Telematika Indonesia',
+    '1499': 'PT. Mitra Integrasi Informatika',
+    '1500': 'PT. Solusi Tunas Pratama',
+    // Add more mappings as needed
+  }
+  
+  return registrarMap[id] || null
+}
+
 export interface WhoisData {
   registrar?: string
   status?: DomainStatus
@@ -472,7 +506,9 @@ function parseRdapResponse(data: any, domain: string): WhoisData | null {
         if (!result.registrar && registrarEntity.publicIds) {
           const ianaId = registrarEntity.publicIds.find((pid: any) => pid.type === 'IANA Registrar ID')
           if (ianaId) {
-            result.registrar = `Registrar ID: ${ianaId.identifier}`
+            // Map IANA ID to registrar name for better user experience
+            const registrarName = getRegistrarNameFromId(ianaId.identifier)
+            result.registrar = registrarName || `Registrar ID: ${ianaId.identifier}`
           }
         }
       }
