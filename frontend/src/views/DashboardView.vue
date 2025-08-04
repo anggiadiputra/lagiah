@@ -235,7 +235,21 @@
       <div class="mb-8">
         <div class="bg-white rounded-lg shadow-lg overflow-hidden">
           <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-medium text-gray-900">Recent Activity</h3>
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-medium text-gray-900">Recent Activity</h3>
+              <div class="flex items-center space-x-2">
+                <span class="text-sm text-gray-500">Last 5 activities</span>
+                <button 
+                  @click="refreshDashboard"
+                  class="inline-flex items-center px-2 py-1 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                >
+                  <svg class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Refresh
+                </button>
+              </div>
+            </div>
           </div>
           
           <!-- Desktop Activity View -->
@@ -243,48 +257,51 @@
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50">
                 <tr>
-                  <th scope="col" class="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     User
                   </th>
-                  <th scope="col" class="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Action
                   </th>
-                  <th scope="col" class="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Entity
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Resource
                   </th>
-                  <th scope="col" class="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Details
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Description
                   </th>
-                  <th scope="col" class="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Time
                   </th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
                 <tr v-for="activity in dashboardStore.recentActivity" :key="activity.id" class="hover:bg-gray-50 transition-colors duration-150">
-                  <td class="px-8 py-5 whitespace-nowrap">
+                  <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
                       <div class="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
                         <span class="text-sm font-medium text-primary-700">{{ activity.userName?.charAt(0)?.toUpperCase() || 'U' }}</span>
                       </div>
                       <div class="ml-3">
                         <div class="text-sm font-medium text-gray-900">{{ activity.userName || 'Unknown User' }}</div>
+                        <div class="text-xs text-gray-500">{{ activity.ipAddress || 'No IP' }}</div>
                       </div>
                     </div>
                   </td>
-                  <td class="px-8 py-5 whitespace-nowrap">
+                  <td class="px-6 py-4 whitespace-nowrap">
                     <span :class="{
                       'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800': activity.action === 'CREATE',
                       'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800': activity.action === 'READ',
                       'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800': activity.action === 'UPDATE',
                       'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800': activity.action === 'DELETE',
                       'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800': activity.action === 'LOGIN',
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800': activity.action === 'LOGOUT'
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800': activity.action === 'LOGOUT',
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800': activity.action === 'EXPORT',
+                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800': activity.action === 'IMPORT'
                     }">
                       {{ activity.action }}
                     </span>
                   </td>
-                  <td class="px-8 py-5 whitespace-nowrap">
+                  <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
                       <!-- Entity Type Icon -->
                       <svg v-if="activity.entityType === 'DOMAIN'" class="h-5 w-5 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -302,20 +319,30 @@
                       <svg v-else-if="activity.entityType === 'USER'" class="h-5 w-5 text-gray-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
+                      <svg v-else-if="activity.entityType === 'SETTING'" class="h-5 w-5 text-orange-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
                       <span class="text-sm font-medium text-gray-900">{{ activity.entityType }}</span>
                     </div>
                   </td>
-                  <td class="px-8 py-5">
-                    <div class="text-sm text-gray-900 max-w-xs truncate" :title="activity.entityName">
-                      {{ activity.entityName }}
+                  <td class="px-6 py-4">
+                    <div class="text-sm text-gray-900 max-w-xs" :title="activity.details">
+                      <div class="truncate">{{ activity.details || 'No description' }}</div>
+                      <div v-if="activity.entityName && activity.entityName !== activity.details" class="text-xs text-gray-500 mt-1 truncate">
+                        {{ activity.entityName }}
+                      </div>
                     </div>
                   </td>
-                  <td class="px-8 py-5 whitespace-nowrap text-sm text-gray-500">
-                    {{ formatTimeAgo(activity.createdAt) }}
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div class="flex flex-col">
+                      <span>{{ formatTimeAgo(activity.createdAt) }}</span>
+                      <span class="text-xs text-gray-400">{{ formatDate(activity.createdAt) }}</span>
+                    </div>
                   </td>
                 </tr>
                 <tr v-if="dashboardStore.recentActivity.length === 0">
-                  <td colspan="5" class="px-8 py-12 text-center">
+                  <td colspan="5" class="px-6 py-12 text-center">
                     <div class="text-gray-500">
                       <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -347,7 +374,9 @@
                           'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800': activity.action === 'UPDATE',
                           'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800': activity.action === 'DELETE',
                           'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800': activity.action === 'LOGIN',
-                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800': activity.action === 'LOGOUT'
+                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800': activity.action === 'LOGOUT',
+                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800': activity.action === 'EXPORT',
+                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-800': activity.action === 'IMPORT'
                         }">
                           {{ activity.action }}
                         </span>
@@ -369,16 +398,27 @@
                         <svg v-else-if="activity.entityType === 'USER'" class="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
+                        <svg v-else-if="activity.entityType === 'SETTING'" class="h-4 w-4 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
                         <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">{{ activity.entityType }}</span>
                       </div>
-                      <div class="text-sm text-gray-900 mt-1 truncate" :title="activity.entityName">
-                        {{ activity.entityName }}
+                      <div class="text-sm text-gray-900 mt-1" :title="activity.details">
+                        <div class="truncate">{{ activity.details || 'No description' }}</div>
+                        <div v-if="activity.entityName && activity.entityName !== activity.details" class="text-xs text-gray-500 mt-1 truncate">
+                          {{ activity.entityName }}
+                        </div>
                       </div>
+                      <div class="text-xs text-gray-500 mt-1">{{ activity.ipAddress || 'No IP' }}</div>
                     </div>
                   </div>
                   <div class="text-right">
                     <div class="text-xs text-gray-500">
                       {{ formatTimeAgo(activity.createdAt) }}
+                    </div>
+                    <div class="text-xs text-gray-400 mt-1">
+                      {{ formatDate(activity.createdAt) }}
                     </div>
                   </div>
                 </div>
