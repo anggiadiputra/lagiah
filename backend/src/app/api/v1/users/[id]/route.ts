@@ -3,6 +3,7 @@ import { prisma } from '@/lib/database'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { verifyJwtToken } from '@/lib/auth/jwt'
+import { logActivity, getClientIP, getUserAgent } from '@/lib/utils'
 
 // Validation schemas
 const updateUserSchema = z.object({
@@ -507,18 +508,19 @@ export async function DELETE(
     })
     
     // Log activity
-    await prisma.activityLog.create({
-      data: {
-        action: 'DELETE',
-        entity: 'USER',
-        entityId: userId,
-        description: `Deleted user: ${existingUser.name} (${existingUser.email})`,
-        userId: authUser.id, // Use authenticated user ID
-        metadata: {
-          userRole: existingUser.role,
-          userEmail: existingUser.email
-        }
-      }
+    await logActivity({
+      userId: authUser.id,
+      action: 'DELETE',
+      entity: 'USER',
+      entityId: userId,
+      description: `Deleted user: ${existingUser.name} (${existingUser.email})`,
+      metadata: {
+        userName: existingUser.name,
+        userEmail: existingUser.email,
+        userRole: existingUser.role
+      },
+      ipAddress: getClientIP(request),
+      userAgent: getUserAgent(request)
     })
     
     return NextResponse.json({

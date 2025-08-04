@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/database'
 import { withRoles, withApiMiddleware, withMethods } from '@/middleware/api-middleware'
-import { successResponse, errorResponse, getUserFromHeaders } from '@/lib/utils'
+import { successResponse, errorResponse, getUserFromHeaders, logActivity, getClientIP, getUserAgent } from '@/lib/utils'
 import { updateWebsiteSchema } from '@/lib/validation/schemas'
 import { verifyJwtToken } from '@/lib/auth/jwt'
 
@@ -199,6 +199,21 @@ async function deleteWebsite(req: NextRequest, { params }: { params: Promise<{ i
     // Delete the website
     await prisma.website.delete({
       where: { id: websiteId }
+    })
+
+    // Log activity
+    await logActivity({
+      userId: user.id,
+      action: 'DELETE',
+      entity: 'WEBSITE',
+      entityId: websiteId,
+      description: `Deleted website: ${existingWebsite.name}`,
+      metadata: {
+        websiteName: existingWebsite.name,
+        websiteUrl: existingWebsite.url
+      },
+      ipAddress: getClientIP(req),
+      userAgent: getUserAgent(req)
     })
 
     // Website deleted successfully

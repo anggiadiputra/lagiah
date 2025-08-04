@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/database'
-import { successResponse, errorResponse, getUserFromHeaders, cleanupExpiredHostingAssignments } from '@/lib/utils'
+import { successResponse, errorResponse, getUserFromHeaders, cleanupExpiredHostingAssignments, logActivity, getClientIP, getUserAgent } from '@/lib/utils'
 import { withApiMiddleware, withMethods, withRoles } from '@/middleware/api-middleware'
 import { updateHostingSchema, idSchema } from '@/lib/validation/schemas'
 import { encrypt, decrypt } from '@/lib/crypto'
@@ -373,14 +373,18 @@ async function deleteHosting(req: NextRequest, { params }: RouteParams) {
   })
 
   // Log activity
-  await prisma.activityLog.create({
-    data: {
-      action: 'DELETE',
-      entity: 'HOSTING',
-      entityId: id,
-      description: `Hosting account deleted: ${existingHosting.name}`,
-      userId: user.id,
+  await logActivity({
+    userId: user.id,
+    action: 'DELETE',
+    entity: 'HOSTING',
+    entityId: id,
+    description: `Deleted hosting account: ${existingHosting.name}`,
+    metadata: {
+      hostingName: existingHosting.name,
+      provider: existingHosting.provider
     },
+    ipAddress: getClientIP(req),
+    userAgent: getUserAgent(req)
   })
 
   return successResponse({ message: 'Hosting account deleted successfully' })

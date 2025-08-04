@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/database'
-import { successResponse, errorResponse, getUserFromHeaders } from '@/lib/utils'
+import { successResponse, errorResponse, getUserFromHeaders, logActivity, getClientIP, getUserAgent } from '@/lib/utils'
 import { withApiMiddleware, withMethods, withRoles } from '@/middleware/api-middleware'
 import { idSchema, updateVpsSchema } from '@/lib/validation/schemas'
 import { encrypt } from '@/lib/crypto'
@@ -353,14 +353,18 @@ async function deleteVps(req: NextRequest, { params }: { params: Promise<{ id: s
   })
   
   // Log activity
-  await prisma.activityLog.create({
-    data: {
-      action: 'DELETE',
-      entity: 'VPS',
-      entityId: id,
-      description: `VPS server deleted: ${existingVps.name}`,
-      userId: user.id,
+  await logActivity({
+    userId: user.id,
+    action: 'DELETE',
+    entity: 'VPS',
+    entityId: id,
+    description: `Deleted VPS server: ${existingVps.name}`,
+    metadata: {
+      vpsName: existingVps.name,
+      provider: existingVps.provider
     },
+    ipAddress: getClientIP(req),
+    userAgent: getUserAgent(req)
   })
   
   return successResponse({ message: 'VPS deleted successfully' })
