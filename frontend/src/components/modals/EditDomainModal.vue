@@ -75,15 +75,19 @@
                 <div>
                   <label for="registrar" class="block text-sm font-medium text-gray-700 mb-2">
                     Registrar
+                    <span class="text-xs text-gray-500 ml-1">(from WHOIS data)</span>
                   </label>
                   <input
                     id="registrar"
                     v-model="form.registrar"
                     type="text"
-                    :disabled="isLoading"
+                    :disabled="true"
                     class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed sm:text-sm"
-                    placeholder="Domain registrar name"
+                    placeholder="Registrar name from WHOIS lookup"
                   >
+                  <p class="mt-1 text-xs text-gray-500">
+                    Registrar information is automatically retrieved from WHOIS data. Use "Refresh WHOIS" to update this information.
+                  </p>
                 </div>
 
                 <!-- Status Field -->
@@ -243,9 +247,8 @@ const handleSubmit = async () => {
 
   try {
     const domainData = {
-      registrar: form.value.registrar || undefined,
+      // registrar field is excluded as it should only be updated via WHOIS refresh
       status: form.value.status,
-
       notes: form.value.notes || undefined,
     }
     

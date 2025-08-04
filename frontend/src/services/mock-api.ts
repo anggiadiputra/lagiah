@@ -11,7 +11,7 @@ const mockData = {
     {
       id: '1',
       name: 'example.com',
-      registrar: 'GoDaddy',
+      registrar: null, // Will be populated from WHOIS data
       status: 'ACTIVE',
       registeredAt: '2023-01-15T00:00:00.000Z',
       expiresAt: '2024-01-15T00:00:00.000Z',
@@ -25,9 +25,9 @@ const mockData = {
       hostingId: '1',
       whoisData: {
         domain_name: 'example.com',
-        registrar: 'GoDaddy',
-        whois_server: 'whois.godaddy.com',
-        referral_url: 'http://www.godaddy.com',
+        registrar: null, // Will be populated from WHOIS lookup
+        whois_server: 'whois.example.com',
+        referral_url: 'http://www.example.com',
         updated_date: '2023-06-20T00:00:00.000Z',
         creation_date: '2023-01-15T00:00:00.000Z',
         expiration_date: '2024-01-15T00:00:00.000Z',
@@ -40,7 +40,7 @@ const mockData = {
     {
       id: '2',
       name: 'testdomain.org',
-      registrar: 'Namecheap',
+      registrar: null, // Will be populated from WHOIS data
       status: 'EXPIRING_SOON',
       registeredAt: '2022-07-10T00:00:00.000Z',
       expiresAt: '2023-08-10T00:00:00.000Z',
@@ -162,10 +162,10 @@ export const mockApiService = {
   async createDomain(domainData: any) {
     await delay(800) // Longer delay to simulate processing
     
-    // Generate mock Whois data
+    // Generate mock Whois data - registrar will be populated from actual WHOIS lookup
     const whoisData = {
       domain_name: domainData.name,
-      registrar: domainData.registrar || 'Mock Registrar',
+      registrar: domainData.registrar || null, // Will be populated from WHOIS lookup
       whois_server: 'whois.example.com',
       referral_url: 'http://www.example.com',
       updated_date: new Date().toISOString(),
@@ -268,19 +268,26 @@ export const mockApiService = {
   async lookupWhois(domain: string) {
     await delay(1200) // Longer delay to simulate external API call
     
+    // Simulate real WHOIS data without hardcoded registrar names
+    // In real implementation, this would come from actual WHOIS API
+    const mockRegistrar = domain.includes('.id') ? 'PT. Daftar Nama Domain Indonesia (DND-ID)' : 
+                         domain.includes('.com') ? 'GoDaddy.com, LLC' :
+                         domain.includes('.org') ? 'Public Interest Registry' :
+                         domain.includes('.net') ? 'VeriSign Global Registry Services' : null
+    
     return {
       status: 'success',
       data: {
         domain_name: domain,
-        registrar: 'Mock Registrar LLC',
-        whois_server: 'whois.example.com',
-        referral_url: 'http://www.mockregistrar.com',
+        registrar: mockRegistrar,
+        whois_server: `whois.${domain.split('.').pop()}.com`,
+        referral_url: mockRegistrar ? `http://www.${mockRegistrar.toLowerCase().replace(/[^a-z0-9]/g, '')}.com` : null,
         updated_date: new Date().toISOString(),
         creation_date: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString(),
         expiration_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-        name_servers: ['ns1.mockhost.com', 'ns2.mockhost.com'],
+        name_servers: [`ns1.${domain.split('.').pop()}.com`, `ns2.${domain.split('.').pop()}.com`],
         status: ['clientTransferProhibited'],
-        emails: ['abuse@mockregistrar.com', 'support@mockregistrar.com'],
+        emails: mockRegistrar ? [`abuse@${domain.split('.').pop()}.com`, `support@${domain.split('.').pop()}.com`] : [],
         dnssec: 'unsigned',
         fetchedAt: new Date().toISOString(),
         source: 'mock-whois-api'

@@ -65,7 +65,7 @@ export const createDomainSchema = z.object({
 })
 
 export const updateDomainSchema = z.object({
-  registrar: z.string().optional(),
+  // registrar field is excluded as it should only be updated via WHOIS refresh
   status: z.enum(['ACTIVE', 'EXPIRED', 'SUSPENDED', 'TRANSFERRED', 'DELETED']).optional(),
   registeredAt: z.string().datetime().optional(),
   expiresAt: z.string().datetime().optional(),

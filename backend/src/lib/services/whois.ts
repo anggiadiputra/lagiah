@@ -1,37 +1,13 @@
 import { DomainStatus } from '@/generated/prisma'
 
 /**
- * Map IANA Registrar ID to registrar name
+ * Get registrar name from IANA ID - returns the ID if no mapping available
+ * This ensures we always get the actual registrar information from WHOIS data
  */
 function getRegistrarNameFromId(id: string): string | null {
-  const registrarMap: { [key: string]: string } = {
-    '1478': 'PT. Daftar Nama Domain Indonesia (DND-ID)',
-    '1479': 'PT. Media Antar Nusa',
-    '1480': 'PT. Indosat',
-    '1481': 'PT. Telkom Indonesia',
-    '1482': 'PT. Cyberindo Aditama',
-    '1483': 'PT. Master Web Network',
-    '1484': 'PT. Artha Media Networks',
-    '1485': 'PT. CBN',
-    '1486': 'PT. Link Net',
-    '1487': 'PT. First Media',
-    '1488': 'PT. Biznet Networks',
-    '1489': 'PT. MNC Play Media',
-    '1490': 'PT. XL Axiata',
-    '1491': 'PT. Hutchison CP Telecommunications',
-    '1492': 'PT. Smartfren Telecom',
-    '1493': 'PT. Sampoerna Telekomunikasi Indonesia',
-    '1494': 'PT. Pasifik Satelit Nusantara',
-    '1495': 'PT. Aplikanusa Lintasarta',
-    '1496': 'PT. Sigma Cipta Caraka',
-    '1497': 'PT. Infokom Elektrindo',
-    '1498': 'PT. Mora Telematika Indonesia',
-    '1499': 'PT. Mitra Integrasi Informatika',
-    '1500': 'PT. Solusi Tunas Pratama',
-    // Add more mappings as needed
-  }
-  
-  return registrarMap[id] || null
+  // Return the IANA ID directly instead of hardcoded mapping
+  // This ensures we get the actual registrar information from WHOIS data
+  return id || null
 }
 
 export interface WhoisData {
@@ -495,21 +471,38 @@ function parseRdapResponse(data: any, domain: string): WhoisData | null {
         entity.roles && entity.roles.includes('registrar')
       )
       if (registrarEntity) {
-        // Try to get registrar name from vcard
+        // Try to get registrar name from vcard first (most reliable)
         if (registrarEntity.vcardArray) {
           const vcard = registrarEntity.vcardArray[1]
-          if (vcard && vcard[3] && vcard[3][3]) {
+          // Look for the "fn" (full name) field in vcard
+          const fnField = vcard.find((field: any) => field[0] === 'fn')
+          if (fnField && fnField[3]) {
+            result.registrar = fnField[3]
+          }
+          // Fallback to the old method if fn field not found
+          if (!result.registrar && vcard && vcard[3] && vcard[3][3]) {
             result.registrar = vcard[3][3]
           }
         }
-        // Also try to get from publicIds
+        // If no vcard name, try to get from publicIds
         if (!result.registrar && registrarEntity.publicIds) {
           const ianaId = registrarEntity.publicIds.find((pid: any) => pid.type === 'IANA Registrar ID')
           if (ianaId) {
-            // Map IANA ID to registrar name for better user experience
-            const registrarName = getRegistrarNameFromId(ianaId.identifier)
-            result.registrar = registrarName || `Registrar ID: ${ianaId.identifier}`
+            // Use IANA ID directly instead of mapping
+            result.registrar = `Registrar ID: ${ianaId.identifier}`
           }
+        }
+        // If still no registrar name, try to get from handle
+        if (!result.registrar && registrarEntity.handle) {
+          result.registrar = registrarEntity.handle
+        }
+        
+        // Add registrar name to whoisData for display
+        if (result.registrar) {
+          if (!result.whoisData.data) {
+            result.whoisData.data = {}
+          }
+          result.whoisData.data['Registrar Name'] = result.registrar
         }
       }
     }

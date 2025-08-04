@@ -101,7 +101,10 @@
                   <!-- Registrar Name -->
                   <div class="flex justify-between items-center py-1.5 border-b border-gray-100">
                     <span class="font-medium text-gray-900 text-sm">Registrar Name:</span>
-                    <span class="text-gray-700 text-sm">{{ getRegistrarName() }}</span>
+                    <div class="text-right">
+                      <span class="text-gray-700 text-sm">{{ getRegistrarName() }}</span>
+                      <div class="text-xs text-gray-500 mt-1">From WHOIS data</div>
+                    </div>
                   </div>
                   
                   <!-- DNSSEC -->
@@ -312,7 +315,10 @@ const getRegistrarName = (): string => {
   if (whoisInfo.value?.registrar) {
     return whoisInfo.value.registrar
   }
-  return props.domain?.registrar || 'N/A'
+  if (props.domain?.registrar) {
+    return props.domain.registrar
+  }
+  return 'Not available - refresh WHOIS data'
 }
 
 // Get nameservers from WHOIS data
