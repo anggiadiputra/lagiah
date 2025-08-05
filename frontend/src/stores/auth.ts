@@ -23,6 +23,8 @@ export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const lastProfileFetch = ref<number>(0)
+  const profileCacheDuration = 5 * 60 * 1000 // 5 minutes cache
 
   // Getters
   const isAuthenticated = computed(() => !!user.value && !!token.value)
@@ -114,6 +116,12 @@ export const useAuthStore = defineStore('auth', () => {
       return null
     }
     
+    // Check cache first
+    const now = Date.now()
+    if (user.value && (now - lastProfileFetch.value) < profileCacheDuration) {
+      return user.value
+    }
+    
     try {
       // Use apiService instead of hardcoded URL
       const response = await apiService.getProfile()
@@ -126,6 +134,7 @@ export const useAuthStore = defineStore('auth', () => {
         if (userData && userData.id) {
           // User profile loaded successfully
           user.value = userData
+          lastProfileFetch.value = now
           return userData
         } else {
           // Invalid user data

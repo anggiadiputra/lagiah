@@ -104,8 +104,11 @@ router.beforeEach(async (to, from, next) => {
   // Get auth store
   const authStore = useAuthStore()
   
-  // Initialize auth store if needed
-  if (!authStore.user && localStorage.getItem('auth_token')) {
+  // Check if user has a token
+  const hasToken = localStorage.getItem('auth_token')
+  
+  // Only initialize if we have a token but no user data
+  if (hasToken && !authStore.user) {
     try {
       await authStore.initialize()
     } catch (error) {
@@ -115,13 +118,10 @@ router.beforeEach(async (to, from, next) => {
     }
   }
   
-  // Check if user has a token (even if not fully authenticated)
-  const hasToken = localStorage.getItem('auth_token')
-  
   // If route requires auth and user is not authenticated
   if (requiresAuth && !authStore.isAuthenticated) {
-    // If user has token but not authenticated, try to initialize
-    if (hasToken) {
+    // If user has token but not authenticated, try to initialize once more
+    if (hasToken && !authStore.user) {
       try {
         await authStore.initialize()
         // If still not authenticated after initialization, redirect to login
@@ -142,7 +142,7 @@ router.beforeEach(async (to, from, next) => {
         })
       }
     } else {
-      // No token, redirect to login
+      // No token or already tried, redirect to login
       next({
         path: '/login',
         query: { redirect: to.fullPath }

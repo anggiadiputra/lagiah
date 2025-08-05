@@ -45,24 +45,9 @@ export async function GET(req: NextRequest) {
       return errorResponse('User not found', 'USER_NOT_FOUND', 404)
     }
     
-    // User found
-    
-    // Get recent activity
-    const recentActivity = await prisma.activityLog.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-      select: {
-        action: true,
-        entity: true,
-        description: true,
-        createdAt: true,
-      },
-    })
-    
+    // User found - return user data only (recent activity can be fetched separately)
     return successResponse({
       user,
-      recentActivity,
     })
   } catch (error) {
     // Error fetching user profile
