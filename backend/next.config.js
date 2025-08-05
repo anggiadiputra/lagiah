@@ -22,22 +22,7 @@ const nextConfig = {
   
   // Environment variables - removed NODE_ENV as it's not allowed
   
-  // Headers for CORS - Updated for hybrid deployment
-  async headers() {
-    const corsOrigin = process.env.CORS_ORIGIN || 'https://apps.indexof.id'
-    
-    return [
-      {
-        source: '/api/(.*)',
-        headers: [
-          { key: 'Access-Control-Allow-Origin', value: corsOrigin },
-          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, DELETE, OPTIONS' },
-          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, X-Requested-With' },
-          { key: 'Access-Control-Max-Age', value: '86400' },
-        ],
-      },
-    ]
-  },
+  // CORS is now handled by middleware
 }
 
 module.exports = nextConfig 

@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 const allowedOrigins = [
   'http://localhost:5178',
   'http://localhost:5173',
+  'https://apps.indexof.id',
+  process.env.CORS_ORIGIN,
   process.env.FRONTEND_URL,
 ].filter(Boolean)
 
@@ -10,7 +12,7 @@ export function middleware(request: NextRequest) {
   const origin = request.headers.get('origin') ?? ''
   
   // Determine if the origin is allowed
-  const isAllowedOrigin = allowedOrigins.includes(origin)
+  const isAllowedOrigin = allowedOrigins.includes(origin) || allowedOrigins.some(allowed => allowed === origin)
 
   // Handle preflight requests
   if (request.method === 'OPTIONS') {
@@ -31,8 +33,6 @@ export function middleware(request: NextRequest) {
   if (isAllowedOrigin) {
     response.headers.set('Access-Control-Allow-Origin', origin)
   }
-  
-  response.headers.set('Access-Control-Allow-Credentials', 'true')
   
   return response
 }
