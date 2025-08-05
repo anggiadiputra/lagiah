@@ -24,11 +24,13 @@ const nextConfig = {
   
   // Headers for CORS - Updated for hybrid deployment
   async headers() {
+    const corsOrigin = process.env.CORS_ORIGIN || 'https://apps.indexof.id'
+    
     return [
       {
         source: '/api/(.*)',
         headers: [
-          { key: 'Access-Control-Allow-Origin', value: process.env.CORS_ORIGIN || '*' },
+          { key: 'Access-Control-Allow-Origin', value: corsOrigin },
           { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, DELETE, OPTIONS' },
           { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
           { key: 'Access-Control-Allow-Credentials', value: 'true' },

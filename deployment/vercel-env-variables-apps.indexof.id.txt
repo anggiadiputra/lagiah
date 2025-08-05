@@ -1,0 +1,74 @@
+# 🚀 Vercel Environment Variables - apps.indexof.id
+# Copy dan paste ke Vercel Dashboard → Settings → Environment Variables
+
+# ========================================
+# REQUIRED VARIABLES (Wajib diisi)
+# ========================================
+
+# Database URL (Your PostgreSQL)
+DATABASE_URL=postgresql://semar3789_sumopod:jlxQHEE93_-_qBpO@103.94.238.99:65433/semar3789_domains
+
+# JWT Secret (Generated)
+JWT_SECRET=2bac9bc1bff82fcfa64097b563415e3568c4b1097271cc0db3b869e8df2f458f
+
+# NextAuth Secret (Generated)
+NEXTAUTH_SECRET=d0d5232b03b823def194bcee354038776f3d5415525c1e791ebe380ad5bd97e6
+
+# NextAuth URL (Updated dengan domain Vercel)
+NEXTAUTH_URL=https://api.indexof.id
+
+# CORS Origin (Updated untuk domain apps.indexof.id)
+CORS_ORIGIN=https://apps.indexof.id
+
+# Node Environment
+NODE_ENV=production
+
+# ========================================
+# OPTIONAL VARIABLES (Opsional)
+# ========================================
+
+# WhatsApp API (Jika menggunakan WhatsApp)
+WHATSAPP_API_URL=https://your-whatsapp-api.com
+WHATSAPP_API_TOKEN=your-whatsapp-token
+
+# Redis URL (Jika menggunakan Redis)
+REDIS_URL=redis://username:password@host:6379
+
+# Port (Default Vercel)
+PORT=3000
+
+# ========================================
+# DEPLOYMENT INFO
+# ========================================
+
+# ✅ Backend URL: https://api.indexof.id
+# ✅ Frontend URL: https://apps.indexof.id
+# ✅ Database: PostgreSQL production
+# ✅ Status: Deployed successfully
+
+# ========================================
+# TEST CREDENTIALS
+# ========================================
+
+# Email: admin@lagiah.com
+# Password: admin123
+
+# ========================================
+# DATABASE INFO
+# ========================================
+
+# Host: 103.94.238.99
+# Port: 65433
+# Database: semar3789_domains
+# Username: semar3789_sumopod
+# Password: jlxQHEE93_-_qBpO
+
+# ========================================
+# SECURITY NOTES
+# ========================================
+
+# ✅ Database connection string sudah valid
+# ✅ JWT_SECRET dan NEXTAUTH_SECRET sudah di-generate secara aman
+# ✅ Jangan share secrets ini ke publik
+# ✅ Backup database secara berkala
+# ✅ Monitor database performance 
