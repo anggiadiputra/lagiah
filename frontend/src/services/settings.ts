@@ -59,15 +59,32 @@ export interface UpdateSettingsResponse {
 }
 
 class SettingsService {
+  private cache = new Map<string, { data: any; timestamp: number }>()
+  private cacheDuration = 5 * 60 * 1000 // 5 minutes
+
   // Get all settings
   async getSettings(category?: string): Promise<SettingsData> {
+    const cacheKey = `settings_${category || 'all'}`
+    const now = Date.now()
+    
+    // Check cache first
+    const cached = this.cache.get(cacheKey)
+    if (cached && (now - cached.timestamp) < this.cacheDuration) {
+      console.log(`Using cached settings for ${category || 'all'}`)
+      return cached.data
+    }
+    
     try {
+      console.log(`Fetching settings for ${category || 'all'} from API...`)
       const response = await apiService.getSettings(category)
       
       // Handle response structure from API interceptor
       const responseData = response.data ? response.data : response
       
       if (responseData.status === 'success' && responseData.data) {
+        // Cache the result
+        this.cache.set(cacheKey, { data: responseData.data, timestamp: now })
+        console.log(`Settings cached for ${category || 'all'}`)
         return responseData.data
       } else {
         throw new Error('Invalid response structure from settings API')

@@ -62,16 +62,32 @@ export const useDashboardStore = defineStore('dashboard', () => {
   const expiringVPS = ref<any[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+  
+  // Cache timestamps
+  const lastStatsFetch = ref<number>(0)
+  const lastActivityFetch = ref<number>(0)
+  const lastExpiringFetch = ref<number>(0)
+  const cacheDuration = 2 * 60 * 1000 // 2 minutes cache
 
   // Fetch dashboard stats
   const fetchDashboardStats = async () => {
+    // Check cache first
+    const now = Date.now()
+    if (lastStatsFetch.value > 0 && (now - lastStatsFetch.value) < cacheDuration) {
+      console.log('Using cached dashboard stats')
+      return stats.value
+    }
+    
     try {
+      console.log('Fetching dashboard stats from API...')
       const response = await api.getDashboardStats()
       
       // Handle response format from API
       if (response && response.status === 'success' && response.data) {
         stats.value = response.data
+        lastStatsFetch.value = now
         error.value = null
+        console.log('Dashboard stats cached successfully')
       } else {
         throw new Error('Unexpected response format from server')
       }
@@ -89,11 +105,21 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   // Fetch recent activity
   const fetchRecentActivity = async (limit: number = 5) => {
+    // Check cache first
+    const now = Date.now()
+    if (lastActivityFetch.value > 0 && (now - lastActivityFetch.value) < cacheDuration) {
+      console.log('Using cached recent activity')
+      return recentActivity.value
+    }
+    
     try {
+      console.log('Fetching recent activity from API...')
       const response = await api.getRecentActivity({ limit })
       
       if (response && response.status === 'success' && response.data) {
         recentActivity.value = response.data?.items || response.data || []
+        lastActivityFetch.value = now
+        console.log('Recent activity cached successfully')
       } else {
         recentActivity.value = []
       }

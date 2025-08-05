@@ -24,7 +24,8 @@ export const useAuthStore = defineStore('auth', () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
   const lastProfileFetch = ref<number>(0)
-  const profileCacheDuration = 5 * 60 * 1000 // 5 minutes cache
+  const profileCacheDuration = 30 * 60 * 1000 // 30 minutes cache (lebih lama)
+  const isInitialized = ref<boolean>(false)
 
   // Getters
   const isAuthenticated = computed(() => !!user.value && !!token.value)
@@ -116,13 +117,33 @@ export const useAuthStore = defineStore('auth', () => {
       return null
     }
     
-    // Check cache first
+    // Check cache first - lebih agresif
     const now = Date.now()
     if (user.value && (now - lastProfileFetch.value) < profileCacheDuration) {
+      console.log('Using cached user profile')
       return user.value
     }
     
+    // Prevent multiple simultaneous requests
+    if (loading.value) {
+      console.log('Profile fetch already in progress, waiting...')
+      // Wait for current request to complete
+      return new Promise((resolve) => {
+        const checkComplete = () => {
+          if (!loading.value) {
+            resolve(user.value)
+          } else {
+            setTimeout(checkComplete, 100)
+          }
+        }
+        checkComplete()
+      })
+    }
+    
+    loading.value = true
+    
     try {
+      console.log('Fetching user profile from API...')
       // Use apiService instead of hardcoded URL
       const response = await apiService.getProfile()
       
@@ -135,6 +156,7 @@ export const useAuthStore = defineStore('auth', () => {
           // User profile loaded successfully
           user.value = userData
           lastProfileFetch.value = now
+          console.log('User profile cached successfully')
           return userData
         } else {
           // Invalid user data
@@ -156,10 +178,18 @@ export const useAuthStore = defineStore('auth', () => {
       // For other errors, don't return fallback user object
       // This prevents API calls with invalid token
       return null
+    } finally {
+      loading.value = false
     }
   }
 
   async function initialize() {
+    // Prevent multiple initializations
+    if (isInitialized.value) {
+      console.log('Auth store already initialized')
+      return
+    }
+    
     const storedToken = localStorage.getItem('auth_token')
     
     if (storedToken) {
@@ -170,10 +200,13 @@ export const useAuthStore = defineStore('auth', () => {
         const userData = await fetchUserProfile()
         if (userData) {
           user.value = userData
+          isInitialized.value = true
+          console.log('Auth store initialized successfully')
         }
       } catch (err) {
         // Don't logout immediately, just keep the token
         // This might be a temporary network issue
+        console.warn('Failed to initialize auth store:', err)
       }
     }
   }
@@ -193,6 +226,7 @@ export const useAuthStore = defineStore('auth', () => {
     token,
     loading,
     error,
+    isInitialized,
     
     // Getters
     isAuthenticated,

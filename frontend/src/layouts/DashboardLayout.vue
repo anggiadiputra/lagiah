@@ -441,6 +441,7 @@ onMounted(async () => {
     // Only fetch dashboard data if we're on the dashboard page
     if (route.path === '/dashboard') {
       try {
+        console.log('Layout: Loading dashboard data...')
         await dashboardStore.fetchDashboardData()
       } catch (error) {
         console.warn('Failed to load dashboard data in layout:', error)

@@ -107,12 +107,13 @@ router.beforeEach(async (to, from, next) => {
   // Check if user has a token
   const hasToken = localStorage.getItem('auth_token')
   
-  // Only initialize if we have a token but no user data
-  if (hasToken && !authStore.user) {
+  // Only initialize if we have a token but no user data AND not already initialized
+  if (hasToken && !authStore.user && !authStore.isInitialized) {
     try {
+      console.log('Router: Initializing auth store...')
       await authStore.initialize()
     } catch (error) {
-      console.warn('Failed to initialize auth store:', error)
+      console.warn('Router: Failed to initialize auth store:', error)
       // Clear invalid token
       localStorage.removeItem('auth_token')
     }
@@ -121,8 +122,9 @@ router.beforeEach(async (to, from, next) => {
   // If route requires auth and user is not authenticated
   if (requiresAuth && !authStore.isAuthenticated) {
     // If user has token but not authenticated, try to initialize once more
-    if (hasToken && !authStore.user) {
+    if (hasToken && !authStore.user && !authStore.isInitialized) {
       try {
+        console.log('Router: Retrying auth initialization...')
         await authStore.initialize()
         // If still not authenticated after initialization, redirect to login
         if (!authStore.isAuthenticated) {
