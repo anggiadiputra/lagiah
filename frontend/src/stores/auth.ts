@@ -74,10 +74,13 @@ export const useAuthStore = defineStore('auth', () => {
           // Login successful, user loaded
           user.value = userData
           token.value = userToken
+          isInitialized.value = true
+          lastProfileFetch.value = Date.now()
           
           // Save token to localStorage
           localStorage.setItem('auth_token', userToken)
           
+          console.log('Login successful, auth store initialized')
           return { status: 'success', user: userData }
         } else {
           // Missing user or token in response
@@ -215,8 +218,11 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null
     token.value = null
     error.value = null
+    isInitialized.value = false
+    lastProfileFetch.value = 0
     localStorage.removeItem('auth_token')
     localStorage.removeItem('auth_remember')
+    console.log('Auth cleared, reset initialization state')
   }
   
   // Return store

@@ -172,8 +172,10 @@ const handleSubmit = async () => {
     
     if (result.status === 'success') {
       // Get redirect path from query or default to dashboard
-      const redirectPath = router.currentRoute.value.query.redirect as string || '/dashboard'
-      router.push(redirectPath)
+      const redirectPath = router.currentRoute.value.query.redirect as string
+      const targetPath = redirectPath && redirectPath !== 'logout' ? redirectPath : '/dashboard'
+      console.log('Login successful, redirecting to:', targetPath)
+      router.push(targetPath)
     } else if (authLayout.value) {
       // Show error in alert
       authLayout.value.showAlert({

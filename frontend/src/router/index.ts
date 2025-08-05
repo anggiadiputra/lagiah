@@ -169,8 +169,15 @@ router.beforeEach(async (to, from, next) => {
   }
   // If route is login and user is already authenticated
   else if (to.path === '/login' && authStore.isAuthenticated) {
-    // Redirect to dashboard
-    next({ path: '/dashboard' })
+    // Check if there's a redirect query parameter
+    const redirectPath = to.query.redirect as string
+    if (redirectPath && redirectPath !== 'logout') {
+      // Redirect to the specified path
+      next({ path: redirectPath })
+    } else {
+      // Redirect to dashboard
+      next({ path: '/dashboard' })
+    }
   }
   // Otherwise proceed
   else {
